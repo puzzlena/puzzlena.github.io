@@ -43,7 +43,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="" class="js-avatar">
+			<img src="/localimg/111.jpg" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/"></a></h1>
@@ -77,13 +77,9 @@
 		<nav class="header-nav">
 			<div class="social">
 				
-					<a class="github" target="_blank" href="#" title="github"><i class="icon-github"></i></a>
+					<a class="qq" target="_blank" href="/2691054810" title="qq"><i class="icon-qq"></i></a>
 		        
-					<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
-		        
-					<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
-		        
-					<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
+					<a class="weixin" target="_blank" href="/guxu15074444830" title="weixin"><i class="icon-weixin"></i></a>
 		        
 			</div>
 		</nav>
@@ -101,7 +97,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="" class="js-avatar">
+				<img src="/localimg/111.jpg" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author"></h1>
@@ -118,13 +114,9 @@
 			<nav class="header-nav">
 				<div class="social">
 					
-						<a class="github" target="_blank" href="#" title="github"><i class="icon-github"></i></a>
+						<a class="qq" target="_blank" href="/2691054810" title="qq"><i class="icon-qq"></i></a>
 			        
-						<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
-			        
-						<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
-			        
-						<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
+						<a class="weixin" target="_blank" href="/guxu15074444830" title="weixin"><i class="icon-weixin"></i></a>
 			        
 				</div>
 			</nav>
@@ -180,81 +172,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2021/08/24/sqlmap%E7%94%A8%E6%B3%95/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="sql注入漏洞原理"><a href="#sql注入漏洞原理" class="headerlink" title="sql注入漏洞原理"></a>sql注入漏洞原理</h1><h2 id="0x00：漏洞产生原理"><a href="#0x00：漏洞产生原理" class="headerlink" title="#0x00：漏洞产生原理"></a>#0x00：漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生</p>
-<p>下面是一个有注入漏洞的登陆界面的后端</p>
-<p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$conn</span>=mysqli_connect(<span class="variable">$dbServername</span>,<span class="variable">$dbUsername</span>,<span class="variable">$dbPassword</span>,<span class="variable">$dbName</span>);<span class="comment">//连接数据库</span></span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="subst">$userName</span>&#x27; and password=&#x27;<span class="subst">$Password</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$conn</span>,<span class="variable">$sql1</span>)；</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$result</span>)&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;log in&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span>&#123; <span class="keyword">echo</span> <span class="string">&quot;erro&quot;</span>; &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
-<p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;1&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span>#<span class="string">&#x27; and password=&#x27;</span>$Password<span class="string">&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
-<p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
-<p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
-<h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
-<h3 id="mysql中重要的表"><a href="#mysql中重要的表" class="headerlink" title="mysql中重要的表"></a>mysql中重要的表</h3><p>在Mysql 5.0以上版本，定义了<strong>information_schema</strong>数据库,用来存储数据库元信息。<br>其中<strong>schemata</strong>表中：<strong>schema_name</strong>用来存储数据库名.</p>
-<p><strong>tables</strong>表中：<strong>table_schema</strong>和<strong>table_name</strong>分别用来存储数据库名和表名。</p>
-<p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
-<p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
-<h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sele <span class="operator">*</span><span class="keyword">from</span> news <span class="keyword">where</span> id <span class="operator">=</span><span class="number">1</span></span><br></pre></td></tr></table></figure>
-<p>于是我们就可以通过输入sql语句，达到注入效果</p>
-<p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" alt="在这里插入图片描述"></p>
-<p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
-<p>这里我用 select * from news where id=-1 union select 1, group_concat(schema_name)from information_schema.schemata来查询所有的数据库<br> <img src="https://img-blog.csdnimg.cn/20210710201623407.png" alt="在这里插入图片描述">图中红框内就是我们所有的数据库</p>
-<p> 通过相同方法，我们可以用schemata表和tables表和columns表获取数据库中所有的表和字段的信息</p>
-<p>这就是最基础的sql整型注入原理，还有其他注入类型在我的另一篇有详细解释<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入案例</a></p>
-<h2 id="0X02-sql注入防范"><a href="#0X02-sql注入防范" class="headerlink" title="#0X02 sql注入防范"></a>#0X02 sql注入防范</h2><p>既然发现了漏洞就需要我们进行防范了<br>通常是以下几个防范办法</p>
-<ol>
-<li>数据库的普通用户权限和管理员权限分明，用户提交数据后，所连接的数据库权限应该是普通用户级别，这样就防止了sql注入代码对数据库进行增加或删除数据的操作</li>
-<li>将用户输入的语句参数化，而不是直接嵌入到sql语句当中，这样的好处就是我们可以对用户提交上去的数据进行验证和过滤，过滤主要是过滤掉空格或者是特殊字符，甚至可以把sql注入中的一些敏感字符给过滤掉</li>
-<li>对用户加以输入加以限制，在后端对用户输入添加字符限制，如果你只想用户输入数字，那么就对相应的参数加以验证，其他的同样如此，尽量让用户只能输入你想要他输入的东西。</li>
-</ol>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/08/24/SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
         </p>
       
 
@@ -379,6 +296,81 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2021/08/24/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="sql注入漏洞原理"><a href="#sql注入漏洞原理" class="headerlink" title="sql注入漏洞原理"></a>sql注入漏洞原理</h1><h2 id="0x00：漏洞产生原理"><a href="#0x00：漏洞产生原理" class="headerlink" title="#0x00：漏洞产生原理"></a>#0x00：漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生</p>
+<p>下面是一个有注入漏洞的登陆界面的后端</p>
+<p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$conn</span>=mysqli_connect(<span class="variable">$dbServername</span>,<span class="variable">$dbUsername</span>,<span class="variable">$dbPassword</span>,<span class="variable">$dbName</span>);<span class="comment">//连接数据库</span></span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="subst">$userName</span>&#x27; and password=&#x27;<span class="subst">$Password</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$conn</span>,<span class="variable">$sql1</span>)；</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$result</span>)&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;log in&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span>&#123; <span class="keyword">echo</span> <span class="string">&quot;erro&quot;</span>; &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
+<p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;1&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span>#<span class="string">&#x27; and password=&#x27;</span>$Password<span class="string">&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
+<p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
+<h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
+<h3 id="mysql中重要的表"><a href="#mysql中重要的表" class="headerlink" title="mysql中重要的表"></a>mysql中重要的表</h3><p>在Mysql 5.0以上版本，定义了<strong>information_schema</strong>数据库,用来存储数据库元信息。<br>其中<strong>schemata</strong>表中：<strong>schema_name</strong>用来存储数据库名.</p>
+<p><strong>tables</strong>表中：<strong>table_schema</strong>和<strong>table_name</strong>分别用来存储数据库名和表名。</p>
+<p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
+<p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
+<h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sele <span class="operator">*</span><span class="keyword">from</span> news <span class="keyword">where</span> id <span class="operator">=</span><span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>于是我们就可以通过输入sql语句，达到注入效果</p>
+<p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" alt="在这里插入图片描述"></p>
+<p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
+<p>这里我用 select * from news where id=-1 union select 1, group_concat(schema_name)from information_schema.schemata来查询所有的数据库<br> <img src="https://img-blog.csdnimg.cn/20210710201623407.png" alt="在这里插入图片描述">图中红框内就是我们所有的数据库</p>
+<p> 通过相同方法，我们可以用schemata表和tables表和columns表获取数据库中所有的表和字段的信息</p>
+<p>这就是最基础的sql整型注入原理，还有其他注入类型在我的另一篇有详细解释<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入案例</a></p>
+<h2 id="0X02-sql注入防范"><a href="#0X02-sql注入防范" class="headerlink" title="#0X02 sql注入防范"></a>#0X02 sql注入防范</h2><p>既然发现了漏洞就需要我们进行防范了<br>通常是以下几个防范办法</p>
+<ol>
+<li>数据库的普通用户权限和管理员权限分明，用户提交数据后，所连接的数据库权限应该是普通用户级别，这样就防止了sql注入代码对数据库进行增加或删除数据的操作</li>
+<li>将用户输入的语句参数化，而不是直接嵌入到sql语句当中，这样的好处就是我们可以对用户提交上去的数据进行验证和过滤，过滤主要是过滤掉空格或者是特殊字符，甚至可以把sql注入中的一些敏感字符给过滤掉</li>
+<li>对用户加以输入加以限制，在后端对用户输入添加字符限制，如果你只想用户输入数字，那么就对相应的参数加以验证，其他的同样如此，尽量让用户只能输入你想要他输入的东西。</li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/08/24/SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
         </p>
       
 
