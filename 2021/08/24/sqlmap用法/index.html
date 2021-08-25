@@ -8,15 +8,15 @@
   <link rel="dns-prefetch" href="http://example.com">
   <title>Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="sqlmap用法get注入基本用法相关代码 1234python sqlmap.py &quot;url&quot; --dbspython sqlmap.py -D &quot;数据库&quot; --tablespython sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columnspython sqlmap.py -D &quot;数据库&amp;">
+  <meta name="description" content="sqlmap用法">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="http://example.com/2021/08/24/sqlmap%E7%94%A8%E6%B3%95/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="sqlmap用法get注入基本用法相关代码 1234python sqlmap.py &quot;url&quot; --dbspython sqlmap.py -D &quot;数据库&quot; --tablespython sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columnspython sqlmap.py -D &quot;数据库&amp;">
+<meta property="og:description" content="sqlmap用法">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-08-24T14:33:27.578Z">
-<meta property="article:modified_time" content="2021-07-10T03:22:16.669Z">
+<meta property="article:modified_time" content="2021-08-25T10:40:34.717Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
@@ -151,7 +151,9 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="sqlmap用法"><a href="#sqlmap用法" class="headerlink" title="sqlmap用法"></a>sqlmap用法</h1><h2 id="get注入基本用法"><a href="#get注入基本用法" class="headerlink" title="get注入基本用法"></a>get注入基本用法</h2><p>相关代码</p>
+        <h1 id="sqlmap用法"><a href="#sqlmap用法" class="headerlink" title="sqlmap用法"></a>sqlmap用法</h1><span id="more"></span>
+<p>[sql注入, web漏洞]</p>
+<h2 id="get注入基本用法"><a href="#get注入基本用法" class="headerlink" title="get注入基本用法"></a>get注入基本用法</h2><p>相关代码</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">python sqlmap.py &quot;url&quot; --dbs</span><br><span class="line">python sqlmap.py -D &quot;数据库&quot; --tables</span><br><span class="line">python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columns</span><br><span class="line">python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; -C &quot;列&quot; --dump</span><br></pre></td></tr></table></figure>
 
 <h2 id="post注入基本用法"><a href="#post注入基本用法" class="headerlink" title="post注入基本用法"></a>post注入基本用法</h2><p>1、先对页面进行抓包</p>
@@ -160,6 +162,9 @@
 <p>4、对txt文档进行sql注入</p>
 <p>相关代码</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pyhon sqlmap.py -r 文本文件 --dbs          //查看所有数据库,若执行不出，可在后面加--level=3代表注入等级</span><br><span class="line">pyhon sqlmap.py -r 文本文件 --current-db    //查看当前数据库</span><br></pre></td></tr></table></figure>
+
+
+
 
 
       
