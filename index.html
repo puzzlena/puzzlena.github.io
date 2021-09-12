@@ -79,7 +79,7 @@
             
 		</nav>
 		<nav>
-   			 总文章数 5
+   			 总文章数 6
 		</nav>
 
 		<nav class="header-nav">
@@ -396,6 +396,128 @@
 
 
   
+    <article id="post-sssrf漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/08/15/sssrf%E6%BC%8F%E6%B4%9E/">浅析ssrf漏洞</a>
+    </h1>
+  
+
+        
+        <a href="/2021/08/15/sssrf%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <span id="more"></span>
+<h2 id="一、概念"><a href="#一、概念" class="headerlink" title="一、概念"></a>一、概念</h2><p>SSRF(Server-Side Request Forgery:服务器端请求伪造)</p>
+<p>　SSRF漏洞（服务器端请求伪造）：是一种由攻击者构造形成由服务端发起请求的一个安全漏洞。一般情况下，SSRF攻击的目标是从外网无法访问的内部系统。（正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统）</p>
+<p>我的理解是，正常情况下，我们无法访问内网，或者说无法向内网发送报文，但是ssrf是通过服务器访问内网，由于服务器属于内部系统，那么内网就不会拒绝服务器的请求，从而达到一个访问内网的目的。</p>
+<p>正常我们发送请求的过程:<br>客户端—–&gt;服务器(未过滤)——&gt;目标 地址</p>
+<p>可以看到，最后发送目标地址的报文是由服务器发出的，倘若服务器对客户端的url不加以过滤处理，就可能造成srrf漏洞</p>
+<h2 id="二、ssrf漏洞实例"><a href="#二、ssrf漏洞实例" class="headerlink" title="二、ssrf漏洞实例"></a>二、ssrf漏洞实例</h2><p>理解一个漏洞的最快方法就是通过实例取了解它</p>
+<p>这里有一个网站，它希望我们通过GET输入其他的网站，从而跳转到我们输入的网页<br><img src="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png" alt="在这里插入图片描述">如果我们输入<a target="_blank" rel="noopener" href="http://www.baidu.com,那我们就来到了百度的页面/">www.baidu.com,那我们就来到了百度的页面</a><br><img src="https://img-blog.csdnimg.cn/9c8b36dc8a34456bbe73fe46256a3775.png" alt="在这里插入图片描述"><br>倘若我不按规矩走，输入它内网的地址以及文件既127.0.0.1/flag.php,就有可能访问到flag.php里面的内容</p>
+<p><img src="https://img-blog.csdnimg.cn/f418d35520c24506a21e5f55c121c726.png" alt="在这里插入图片描述">这就是一个简单的ssrf漏洞例子</p>
+<p>产生漏洞后，产生的危害有<br>任意访问内网的文件<br>DOS攻击(请求大文件，始终保持连接占用服务器资源)<br>攻击web应用等</p>
+<h2 id="三、ssrf漏洞产生原因"><a href="#三、ssrf漏洞产生原因" class="headerlink" title="三、ssrf漏洞产生原因"></a>三、ssrf漏洞产生原因</h2><p>这里有一个网上大佬总结的ssrf漏洞的图，总结的很详细</p>
+<p><img src="https://img-blog.csdnimg.cn/a532e103d37f4c76a73e9eaaf00dc154.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>主要谈一下利用方式，主要就是这四种协议</p>
+<p>首先这是我搭建的一个网页，它的想法是希望我们输入一个url，从而跳转到那个网页</p>
+<p><img src="https://img-blog.csdnimg.cn/5722b4c908324151b3c2d10b9328e6d7.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>下面是后端代码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span>(<span class="params"><span class="variable">$url</span></span>)</span>&#123;  </span><br><span class="line">    <span class="variable">$ch</span> = curl_init();</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$url</span>);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>);</span><br><span class="line">    curl_exec(<span class="variable">$ch</span>);</span><br><span class="line">    curl_close(<span class="variable">$ch</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$url</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>];</span><br><span class="line">curl(<span class="variable">$url</span>); </span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>curl()可以利用的协议有很多 file,duct,gopher都可以</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">?url=file:<span class="comment">//127.0.0.1/1.txt</span></span><br><span class="line">file协议可以用来读取任意文件</span><br><span class="line"></span><br><span class="line">?url=dict:<span class="comment">//127.0.0.1:8081</span></span><br><span class="line">dict协议可以查看端口开放情况(可以结合BP爆破端口号)</span><br><span class="line"></span><br><span class="line">?gopher:<span class="comment">//&lt;host&gt;:&lt;port&gt;/&lt;gopher-path&gt;</span></span><br><span class="line">gopher协议可以反弹shell，也就是通过服务器向内网发送报文</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>使用dict爆破端口<br><img src="https://img-blog.csdnimg.cn/b8226fdaf6904bb6ba71cb43e47493c5.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>通过gopher协议向内网的其他flag.php传送POST数据(甚至可以通过POST上传图片码等文件)<br><img src="https://img-blog.csdnimg.cn/a5d26b7e4d674b7db7320b525430e9b1.png" alt="在这里插入图片描述"></p>
+<p>在gopher协议中，由于是服务器通过curl向内网发生报文，我们需要对gopher-path内容进行两次编码<br>因为报文内容会在客户端的url上解码一次，服务器通过curl发送报文时解码一次，共两次</p>
+<p>同时还要注意编码过程中换行符%0A要全部替换成%0D%0A,其原因时在linux系统里面换行符的url编码是%0A，而windos是%0D0A，国内大部分在线编码器都是转换成%0A</p>
+<p><strong>注意</strong><br>以上的方法全部都是伪协议<br>伪协议成立的条件还是下面两个函数必须是打开状态，以及版本大于7.3.4</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include=On</span><br><span class="line">allow_url_fopen=On</span><br></pre></td></tr></table></figure>
+
+<p>关于渗透的方式这里有一个大佬写的非常好，甚至很多我都不会，看来仍需学习，链接放这儿了<a target="_blank" rel="noopener" href="https://blog.csdn.net/u012206617/article/details/108941738">ssrf渗透方法</a></p>
+<h2 id="常见的过滤与绕过"><a href="#常见的过滤与绕过" class="headerlink" title="常见的过滤与绕过"></a>常见的过滤与绕过</h2><p>常见的过滤</p>
+<ol>
+<li> 过滤开头不是<a target="_blank" rel="noopener" href="http://xxx.com的所有链接/">http://xxx.com的所有链接</a></li>
+<li>过滤格式为ip的链接，比如127.0.0.1</li>
+<li> 结尾必须是某个后缀</li>
+</ol>
+<p>绕过方法</p>
+<ol>
+<li>http基础认证(加上@)<br>也就是url格式改成<a target="_blank" rel="noopener" href="http://abc.com@127.0.0.1(等同于/?127.0.0.1)">http://abc.com@127.0.0.1(等同于/?127.0.0.1)</a></li>
+<li>使用短链接<br>短链接指向的地址就是内网地址</li>
+<li>更改为其他进制的ip<br>IP地址转换成十进制：</li>
+<li>0.0.1=2130706433</li>
+</ol>
+<h2 id="关于ssrf漏洞可能出现的场景"><a href="#关于ssrf漏洞可能出现的场景" class="headerlink" title="关于ssrf漏洞可能出现的场景"></a>关于ssrf漏洞可能出现的场景</h2><ol>
+<li>首先就是通过url分享网页，也就是这篇笔记中我开头说的例子，这里就不多做解释了</li>
+<li>图片下载与加载<br>一个页面，上面有很多图片，而这些图片可能是保存在他们本地服务器的图片，然后在网页上调用，这样是安全的。<br>同时还有另一种情况就是，程序员为了偷懒，或者是节省空间，在网上借用图片是不是下载在本地，而是直接把图片连接地址放上去，这种方法就有可能是有ssrf漏洞的<br>例如下面这种就是可能存在ssrf漏洞的加载<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://www.douban.com/***/service?image=http://www.baidu.com/img/bd_logo1.png</span><br></pre></td></tr></table></figure></li>
+<li>在线翻译<br> 通过url地址翻译文本内容可能存在ssrf漏洞</li>
+</ol>
+<h2 id="ssrf漏洞的防范"><a href="#ssrf漏洞的防范" class="headerlink" title="ssrf漏洞的防范"></a>ssrf漏洞的防范</h2><p>一、首先就是要对获取url进行一个过滤，过滤掉内网ip，最好是设置一个白名单</p>
+<p>二、对进制不需要的协议，仅允许http和https请求</p>
+<p>三、禁止302跳转,或每跳转一次检查新的host是否为内网ip,后禁止</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span>(<span class="params"><span class="variable">$url</span></span>)</span>&#123;</span><br><span class="line">    <span class="variable">$ch</span> = curl_init();</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$url</span>);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_FOLLOWLOCATION, <span class="literal">True</span>);</span><br><span class="line">    <span class="comment">// 限制为HTTPS、HTTP协议</span></span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>);</span><br><span class="line">    curl_exec(<span class="variable">$ch</span>);</span><br><span class="line">    curl_close(<span class="variable">$ch</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$url</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>];</span><br><span class="line">curl(<span class="variable">$url</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>以上代码就对各种伪协议加上了限制，同时设置跳转重定向为True(也就是默认不跳转)</p>
+<p>四、限制请求的端口为HTTP常用的端口，比如 80,443,8080,8088等</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">SSRF</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/08/15/sssrf%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-sql盲注" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -644,6 +766,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">sql注入</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">SSRF</a>
               </li>
              
               <li class="article-tag-list-item">
