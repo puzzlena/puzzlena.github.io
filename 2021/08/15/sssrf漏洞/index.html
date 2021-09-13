@@ -8,12 +8,12 @@
   <link rel="dns-prefetch" href="http://example.com">
   <title>浅析ssrf漏洞 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="一、概念SSRF(Server-Side Request Forgery:服务器端请求伪造) 　SSRF漏洞（服务器端请求伪造）：是一种由攻击者构造形成由服务端发起请求的一个安全漏洞。一般情况下，SSRF攻击的目标是从外网无法访问的内部系统。（正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统） 我的理解是，正常情况下，我们无法访问内网，或者说无法向内网发送报文，但是ss">
+  <meta name="description" content="在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅析ssrf漏洞">
 <meta property="og:url" content="http://example.com/2021/08/15/sssrf%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="一、概念SSRF(Server-Side Request Forgery:服务器端请求伪造) 　SSRF漏洞（服务器端请求伪造）：是一种由攻击者构造形成由服务端发起请求的一个安全漏洞。一般情况下，SSRF攻击的目标是从外网无法访问的内部系统。（正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统） 我的理解是，正常情况下，我们无法访问内网，或者说无法向内网发送报文，但是ss">
+<meta property="og:description" content="在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/9c8b36dc8a34456bbe73fe46256a3775.png">
@@ -23,8 +23,9 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/b8226fdaf6904bb6ba71cb43e47493c5.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/a5d26b7e4d674b7db7320b525430e9b1.png">
 <meta property="article:published_time" content="2021-08-14T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-12T01:40:08.535Z">
+<meta property="article:modified_time" content="2021-09-13T05:37:41.613Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="PHP漏洞">
 <meta property="article:tag" content="SSRF">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png">
@@ -92,7 +93,7 @@
             
 		</nav>
 		<nav>
-   			 总文章数 6
+   			 总文章数 7
 		</nav>
 
 		<nav class="header-nav">
@@ -199,7 +200,9 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <span id="more"></span>
+        <p>在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题<br>ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞</p>
+<span id="more"></span>
+
 <h2 id="一、概念"><a href="#一、概念" class="headerlink" title="一、概念"></a>一、概念</h2><p>SSRF(Server-Side Request Forgery:服务器端请求伪造)</p>
 <p>　SSRF漏洞（服务器端请求伪造）：是一种由攻击者构造形成由服务端发起请求的一个安全漏洞。一般情况下，SSRF攻击的目标是从外网无法访问的内部系统。（正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统）</p>
 <p>我的理解是，正常情况下，我们无法访问内网，或者说无法向内网发送报文，但是ssrf是通过服务器访问内网，由于服务器属于内部系统，那么内网就不会拒绝服务器的请求，从而达到一个访问内网的目的。</p>
@@ -282,6 +285,10 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">PHP漏洞</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">SSRF</a>
         		</li>
       		
@@ -352,15 +359,20 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/08/15/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2021/08/15/sql%E7%9B%B2%E6%B3%A8/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          文件上传原理及常见的绕过方式
+          sql盲注
         
       </div>
     </a>
   
+  
+    <a href="/2021/08/15/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">文件上传原理及常见的绕过方式</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
@@ -490,11 +502,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
+                <a href="javascript:void(0)" class="js-tag color1">PHP漏洞</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">SSRF</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
               </li>
             
             <div class="clearfix"></div>

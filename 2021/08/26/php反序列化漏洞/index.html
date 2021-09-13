@@ -6,15 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>Tag: sql注入 | Hexo</title>
+  <title>php反序列化漏洞 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/tags/sql%E6%B3%A8%E5%85%A5/index.html">
+  <meta name="description" content="本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="php反序列化漏洞">
+<meta property="og:url" content="http://example.com/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b5e8827045b0485b8183fb8393453d2b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c49515c64c214c9cb0220a7b428061d9.png">
+<meta property="article:published_time" content="2021-08-25T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-09-13T05:34:47.554Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="PHP漏洞">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -166,174 +175,202 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-php反序列化漏洞" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      php反序列化漏洞
+    </h1>
+  
+
+        
+        <a href="/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2021-08-25T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-26</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。</p>
+<span id="more"></span>
+<h2 id="序列化的概念"><a href="#序列化的概念" class="headerlink" title="序列化的概念"></a>序列化的概念</h2><p>当一个对象需要跨文件传递时，或者说为了更加节省空间，通常会对这个对象进行序列化操作，序列化的好处就是将这个对象变成了数据流</p>
+<p>serialize()就是将对象转换为序列化的函数，而unserialize()就是将被序列化的对象重新转换为序列化，通过这样的方式，就可以达到节省空间并且跨文件传递</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">People</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$age</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$name</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">printdata</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;br /&gt;User &#x27;.<span class="subst">$this</span>-&gt;name.&#x27; is &#x27;.<span class="subst">$this</span>-&gt;age.&#x27; years old.&lt;br /&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$P</span> =<span class="keyword">new</span> People();</span><br><span class="line"><span class="variable">$P</span>-&gt;age=<span class="number">18</span>;</span><br><span class="line"><span class="variable">$P</span>-&gt;name=<span class="string">&#x27;zhangsan&#x27;</span>;</span><br><span class="line"><span class="variable">$P</span>-&gt;printdata();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$P</span>)</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"><span class="comment">//a.php</span></span><br></pre></td></tr></table></figure>
+<p>在a.php中，有一个People的对象里面是他的两个变量，在经过赋值以及输出变量后进行了序列化操作，最后页面的输出是这样的<br><img src="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png" alt="在这里插入图片描述"><br>O代表Objec对象，6代表这个对象名字长度是6，People是对象名，2是对象中有2个变量，s是string，3是长度，age是变量名，i是int，18是值，后面的也是同理</p>
+<p>而unserlize()中如果放的是</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:<span class="number">6</span>:<span class="string">&quot;People&quot;</span>:<span class="number">2</span>:&#123;s:<span class="number">3</span>:<span class="string">&quot;age&quot;</span>;i:<span class="number">18</span>;s:<span class="number">4</span>:<span class="string">&quot;name&quot;</span>;s:<span class="number">8</span>:<span class="string">&quot;zhangsan&quot;</span>;&#125;</span><br></pre></td></tr></table></figure>
+<p>那么将会把这个序列对象化。这就是序列化的概念</p>
+<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><p>谈到序列化不得不谈到几个常见的魔法方法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">__destruct()：<span class="comment">//析构函数当对象被销毁时会被自动调用</span></span><br><span class="line">__wakeup(): <span class="comment">//unserialize()时会被自动调用</span></span><br><span class="line">__invoke(): <span class="comment">//当尝试以调用函数的方法调用一个对象时，会被自动调用</span></span><br><span class="line">__call(): <span class="comment">//在对象上下文中调用不可访问的方法时触发</span></span><br><span class="line">__callStatci(): <span class="comment">//在静态上下文中调用不可访问的方法时触发</span></span><br><span class="line">__get(): <span class="comment">//用于从不可访问的属性读取数据</span></span><br><span class="line">__set(): <span class="comment">//用于将数据写入不可访问的属性</span></span><br><span class="line">__isset(): <span class="comment">//在不可访问的属性上调用isset()或empty()触发</span></span><br><span class="line">__unset(): <span class="comment">//在不可访问的属性上使用unset()时触发</span></span><br><span class="line">__toString(): <span class="comment">//把类当作字符串使用时触发</span></span><br><span class="line">__construct(): <span class="comment">//创建一个对象时，调用_construct()</span></span><br><span class="line">__sleep(): <span class="comment">//当序列化一个对象时会调用_sleep()函数</span></span><br></pre></td></tr></table></figure>
+<p>当一个类中包含有这些方法时，在满足条件后这些方法会自动触发</p>
+<p>例如以下的php文件</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$variable</span> = <span class="string">&#x27;BUZZ&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$variable2</span> = <span class="string">&#x27;OTHER&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">printvariable</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="keyword">$this</span>-&gt;variable.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__construct&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__destruct&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__wakeup</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__wakeup&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__sleep</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__sleep&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">array</span>(<span class="string">&#x27;variable&#x27;</span>,<span class="string">&#x27;variable2&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建一个对象，回调用__construct</span></span><br><span class="line"><span class="variable">$object</span> = <span class="keyword">new</span> test();</span><br><span class="line"><span class="comment">//序列化一个对象，会调用__sleep</span></span><br><span class="line"><span class="variable">$serialized</span> = serialize(<span class="variable">$object</span>);</span><br><span class="line"><span class="comment">//输出序列化后的字符串</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">&#x27;Serialized:&#x27;</span>.<span class="variable">$serialized</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line"><span class="comment">//重建对象，会调用__wakeup</span></span><br><span class="line"><span class="variable">$object2</span> = unserialize(<span class="variable">$serialized</span>);</span><br><span class="line"><span class="comment">//调用printvariable,会输出数据(BUZZ)</span></span><br><span class="line"><span class="variable">$object2</span>-&gt;printvariable();</span><br><span class="line"><span class="comment">//脚本结束，会调用__destruct</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>最后的页面回显时这样<br><img src="https://img-blog.csdnimg.cn/b5e8827045b0485b8183fb8393453d2b.png" alt="在这里插入图片描述"><br>可以看到_construct()在对象创立时就自动触发了，序列化对象时触发了_sleep()，而在真是的代码中我并没有实际调用它，是它们自己满足条件后而触发的。<br>在最后也可以看到有两个_destruct被触发了，是因为有两个对象被在脚本结束被销毁了，所以执行了两次</p>
+<p>另外php序列化中<br> protected属性被序列化的时候属性值会变成%00*%00属性名</p>
+<p>private属性被序列化的时候属性值会变成%00类名%00属性名</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">T</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$a</span>=<span class="string">&#x27;aa&#x27;</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$b</span>=<span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$A</span>=<span class="keyword">new</span> T();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$A</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>最终序列化样子是<br><img src="https://img-blog.csdnimg.cn/c49515c64c214c9cb0220a7b428061d9.png" alt="在这里插入图片描述"><br>对于这种情况我们需要反序列化的样子为</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:<span class="number">1</span>:<span class="string">&quot;T&quot;</span>:<span class="number">2</span>:&#123;s:<span class="number">4</span>:<span class="string">&quot;%00A%00a&quot;</span>;s:<span class="number">2</span>:<span class="string">&quot;aa&quot;</span>;s:<span class="number">4</span>:<span class="string">&quot;%00*%00b&quot;</span>;i:<span class="number">13</span>;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当发现一个反序列化漏洞时，我们通常会自己构建一个反序列化的payload，然后执行它并绕过关键魔法方法达到注入效果，例如</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a=<span class="number">8</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">_construct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;phpinfo()&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="variable">$A</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;test&#x27;</span>]</span><br><span class="line"><span class="variable">$B</span>=unserialize(<span class="variable">$A</span>)</span><br><span class="line"><span class="meta">?&gt;</span><span class="comment">//1.php</span></span><br></pre></td></tr></table></figure>
+<p>如果我们构造这样一个payload</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$a</span>=<span class="number">8</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> A();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$a</span>);</span><br><span class="line"><span class="meta">?&gt;</span><span class="comment">//2.php</span></span><br></pre></td></tr></table></figure>
+<p>把序列化后结果输入在url上<br>当1.php中的对象B创造时，里面的_construct就自动触发了，打开了phpinfo()，这是一个最简单的反序列化漏洞的例子</p>
+<h2 id="Session反序列化漏洞"><a href="#Session反序列化漏洞" class="headerlink" title="Session反序列化漏洞"></a>Session反序列化漏洞</h2><p>php中Session获取资源也是先序列化再储存，当读取时再进行反序列化操作</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">ini_set(<span class="string">&#x27;session.serialize_handler&#x27;</span>, <span class="string">&#x27;php_serialize&#x27;</span>);</span><br><span class="line">session_start();</span><br><span class="line"><span class="variable">$_SESSION</span>[<span class="string">&#x27;name&#x27;</span>] = <span class="string">&#x27;spoock&#x27;</span>;</span><br><span class="line">var_dump(<span class="variable">$_SESSION</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这是一段php代码，再php_serialize引擎下，session序列化的数据为</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a:<span class="number">1</span>:&#123;s:<span class="number">4</span>:<span class="string">&quot;name&quot;</span>;s:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;&#125;</span><br></pre></td></tr></table></figure>
+<p>php引擎下为</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">name|s:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;</span><br></pre></td></tr></table></figure>
+<p>php_binary引擎下为</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">names:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;</span><br></pre></td></tr></table></figure>
+<p>php正常下session的实现是没有问题的，危害主要是程序员的Session使用不当引起的</p>
+<p>当网站序列化存储session与反序列化读取session使用的引擎不同时，会导致数据无法正确的反序列化。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2021" class="archive-year">2021</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/15/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/" class="archive-article-date">
-  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/15/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">sql注入原理</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">PHP漏洞</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/15/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2021/08/15/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">sql注入原理</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/15/SQL%E6%B3%A8%E5%85%A5/">sql注入漏洞原理</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/15/sqlmap%E7%94%A8%E6%B3%95/" class="archive-article-date">
-  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/15/sqlmap%E7%94%A8%E6%B3%95/">sqlmap用法</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/15/sql%E7%9B%B2%E6%B3%A8/" class="archive-article-date">
-  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/15/sql%E7%9B%B2%E6%B3%A8/">sql盲注</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-  
-    </div></section>
-  
-
-    
 
 
           </div>
@@ -358,9 +395,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
