@@ -6,24 +6,29 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>php反序列化漏洞 | Hexo</title>
+  <title>浅析ssrf漏洞 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。">
+  <meta name="description" content="在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞">
 <meta property="og:type" content="article">
-<meta property="og:title" content="php反序列化漏洞">
-<meta property="og:url" content="http://example.com/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:title" content="浅析ssrf漏洞">
+<meta property="og:url" content="http://example.com/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。">
+<meta property="og:description" content="在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/b5e8827045b0485b8183fb8393453d2b.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/c49515c64c214c9cb0220a7b428061d9.png">
-<meta property="article:published_time" content="2021-08-25T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-13T05:34:47.554Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9c8b36dc8a34456bbe73fe46256a3775.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f418d35520c24506a21e5f55c121c726.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a532e103d37f4c76a73e9eaaf00dc154.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5722b4c908324151b3c2d10b9328e6d7.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b8226fdaf6904bb6ba71cb43e47493c5.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a5d26b7e4d674b7db7320b525430e9b1.png">
+<meta property="article:published_time" content="2021-09-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-09-13T05:41:19.701Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="PHP漏洞">
+<meta property="article:tag" content="SSRF">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -175,62 +180,77 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-php反序列化漏洞" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-sssrf漏洞" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      php反序列化漏洞
+      浅析ssrf漏洞
     </h1>
   
 
         
-        <a href="/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
-  	<time datetime="2021-08-25T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-26</time>
+        <a href="/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/" class="archive-article-date">
+  	<time datetime="2021-09-12T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-09-13</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>本篇主要是介绍什么是序列化漏洞，对序列化漏洞有个最初的了解。</p>
+        <p>在一个web系统中，内网存放着一些重要的文件以及资源，这些资源往往不能被公开，否则就造成安全问题<br>ssrf漏洞就是通过服务器请求伪造访问内网文件的一种漏洞</p>
 <span id="more"></span>
-<h2 id="序列化的概念"><a href="#序列化的概念" class="headerlink" title="序列化的概念"></a>序列化的概念</h2><p>当一个对象需要跨文件传递时，或者说为了更加节省空间，通常会对这个对象进行序列化操作，序列化的好处就是将这个对象变成了数据流</p>
-<p>serialize()就是将对象转换为序列化的函数，而unserialize()就是将被序列化的对象重新转换为序列化，通过这样的方式，就可以达到节省空间并且跨文件传递</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">People</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$age</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$name</span> = <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">printdata</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;br /&gt;User &#x27;.<span class="subst">$this</span>-&gt;name.&#x27; is &#x27;.<span class="subst">$this</span>-&gt;age.&#x27; years old.&lt;br /&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$P</span> =<span class="keyword">new</span> People();</span><br><span class="line"><span class="variable">$P</span>-&gt;age=<span class="number">18</span>;</span><br><span class="line"><span class="variable">$P</span>-&gt;name=<span class="string">&#x27;zhangsan&#x27;</span>;</span><br><span class="line"><span class="variable">$P</span>-&gt;printdata();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$P</span>)</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"><span class="comment">//a.php</span></span><br></pre></td></tr></table></figure>
-<p>在a.php中，有一个People的对象里面是他的两个变量，在经过赋值以及输出变量后进行了序列化操作，最后页面的输出是这样的<br><img src="https://img-blog.csdnimg.cn/c856ce9bd3bc49879e144e24dfc841e7.png" alt="在这里插入图片描述"><br>O代表Objec对象，6代表这个对象名字长度是6，People是对象名，2是对象中有2个变量，s是string，3是长度，age是变量名，i是int，18是值，后面的也是同理</p>
-<p>而unserlize()中如果放的是</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:<span class="number">6</span>:<span class="string">&quot;People&quot;</span>:<span class="number">2</span>:&#123;s:<span class="number">3</span>:<span class="string">&quot;age&quot;</span>;i:<span class="number">18</span>;s:<span class="number">4</span>:<span class="string">&quot;name&quot;</span>;s:<span class="number">8</span>:<span class="string">&quot;zhangsan&quot;</span>;&#125;</span><br></pre></td></tr></table></figure>
-<p>那么将会把这个序列对象化。这就是序列化的概念</p>
-<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><p>谈到序列化不得不谈到几个常见的魔法方法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">__destruct()：<span class="comment">//析构函数当对象被销毁时会被自动调用</span></span><br><span class="line">__wakeup(): <span class="comment">//unserialize()时会被自动调用</span></span><br><span class="line">__invoke(): <span class="comment">//当尝试以调用函数的方法调用一个对象时，会被自动调用</span></span><br><span class="line">__call(): <span class="comment">//在对象上下文中调用不可访问的方法时触发</span></span><br><span class="line">__callStatci(): <span class="comment">//在静态上下文中调用不可访问的方法时触发</span></span><br><span class="line">__get(): <span class="comment">//用于从不可访问的属性读取数据</span></span><br><span class="line">__set(): <span class="comment">//用于将数据写入不可访问的属性</span></span><br><span class="line">__isset(): <span class="comment">//在不可访问的属性上调用isset()或empty()触发</span></span><br><span class="line">__unset(): <span class="comment">//在不可访问的属性上使用unset()时触发</span></span><br><span class="line">__toString(): <span class="comment">//把类当作字符串使用时触发</span></span><br><span class="line">__construct(): <span class="comment">//创建一个对象时，调用_construct()</span></span><br><span class="line">__sleep(): <span class="comment">//当序列化一个对象时会调用_sleep()函数</span></span><br></pre></td></tr></table></figure>
-<p>当一个类中包含有这些方法时，在满足条件后这些方法会自动触发</p>
-<p>例如以下的php文件</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$variable</span> = <span class="string">&#x27;BUZZ&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$variable2</span> = <span class="string">&#x27;OTHER&#x27;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">printvariable</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="keyword">$this</span>-&gt;variable.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__construct&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__destruct&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__wakeup</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__wakeup&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__sleep</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;__sleep&#x27;</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">array</span>(<span class="string">&#x27;variable&#x27;</span>,<span class="string">&#x27;variable2&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建一个对象，回调用__construct</span></span><br><span class="line"><span class="variable">$object</span> = <span class="keyword">new</span> test();</span><br><span class="line"><span class="comment">//序列化一个对象，会调用__sleep</span></span><br><span class="line"><span class="variable">$serialized</span> = serialize(<span class="variable">$object</span>);</span><br><span class="line"><span class="comment">//输出序列化后的字符串</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">&#x27;Serialized:&#x27;</span>.<span class="variable">$serialized</span>.<span class="string">&#x27;&lt;br /&gt;&#x27;</span>;</span><br><span class="line"><span class="comment">//重建对象，会调用__wakeup</span></span><br><span class="line"><span class="variable">$object2</span> = unserialize(<span class="variable">$serialized</span>);</span><br><span class="line"><span class="comment">//调用printvariable,会输出数据(BUZZ)</span></span><br><span class="line"><span class="variable">$object2</span>-&gt;printvariable();</span><br><span class="line"><span class="comment">//脚本结束，会调用__destruct</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>最后的页面回显时这样<br><img src="https://img-blog.csdnimg.cn/b5e8827045b0485b8183fb8393453d2b.png" alt="在这里插入图片描述"><br>可以看到_construct()在对象创立时就自动触发了，序列化对象时触发了_sleep()，而在真是的代码中我并没有实际调用它，是它们自己满足条件后而触发的。<br>在最后也可以看到有两个_destruct被触发了，是因为有两个对象被在脚本结束被销毁了，所以执行了两次</p>
-<p>另外php序列化中<br> protected属性被序列化的时候属性值会变成%00*%00属性名</p>
-<p>private属性被序列化的时候属性值会变成%00类名%00属性名</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">T</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$a</span>=<span class="string">&#x27;aa&#x27;</span>;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$b</span>=<span class="number">13</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$A</span>=<span class="keyword">new</span> T();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$A</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>最终序列化样子是<br><img src="https://img-blog.csdnimg.cn/c49515c64c214c9cb0220a7b428061d9.png" alt="在这里插入图片描述"><br>对于这种情况我们需要反序列化的样子为</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:<span class="number">1</span>:<span class="string">&quot;T&quot;</span>:<span class="number">2</span>:&#123;s:<span class="number">4</span>:<span class="string">&quot;%00A%00a&quot;</span>;s:<span class="number">2</span>:<span class="string">&quot;aa&quot;</span>;s:<span class="number">4</span>:<span class="string">&quot;%00*%00b&quot;</span>;i:<span class="number">13</span>;&#125;</span><br></pre></td></tr></table></figure>
 
-<p>当发现一个反序列化漏洞时，我们通常会自己构建一个反序列化的payload，然后执行它并绕过关键魔法方法达到注入效果，例如</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a=<span class="number">8</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">_construct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;phpinfo()&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="variable">$A</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;test&#x27;</span>]</span><br><span class="line"><span class="variable">$B</span>=unserialize(<span class="variable">$A</span>)</span><br><span class="line"><span class="meta">?&gt;</span><span class="comment">//1.php</span></span><br></pre></td></tr></table></figure>
-<p>如果我们构造这样一个payload</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$a</span>=<span class="number">8</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> A();</span><br><span class="line"><span class="keyword">echo</span> serialize(<span class="variable">$a</span>);</span><br><span class="line"><span class="meta">?&gt;</span><span class="comment">//2.php</span></span><br></pre></td></tr></table></figure>
-<p>把序列化后结果输入在url上<br>当1.php中的对象B创造时，里面的_construct就自动触发了，打开了phpinfo()，这是一个最简单的反序列化漏洞的例子</p>
-<h2 id="Session反序列化漏洞"><a href="#Session反序列化漏洞" class="headerlink" title="Session反序列化漏洞"></a>Session反序列化漏洞</h2><p>php中Session获取资源也是先序列化再储存，当读取时再进行反序列化操作</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">ini_set(<span class="string">&#x27;session.serialize_handler&#x27;</span>, <span class="string">&#x27;php_serialize&#x27;</span>);</span><br><span class="line">session_start();</span><br><span class="line"><span class="variable">$_SESSION</span>[<span class="string">&#x27;name&#x27;</span>] = <span class="string">&#x27;spoock&#x27;</span>;</span><br><span class="line">var_dump(<span class="variable">$_SESSION</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>这是一段php代码，再php_serialize引擎下，session序列化的数据为</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a:<span class="number">1</span>:&#123;s:<span class="number">4</span>:<span class="string">&quot;name&quot;</span>;s:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;&#125;</span><br></pre></td></tr></table></figure>
-<p>php引擎下为</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">name|s:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;</span><br></pre></td></tr></table></figure>
-<p>php_binary引擎下为</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">names:<span class="number">6</span>:<span class="string">&quot;spoock&quot;</span>;</span><br></pre></td></tr></table></figure>
-<p>php正常下session的实现是没有问题的，危害主要是程序员的Session使用不当引起的</p>
-<p>当网站序列化存储session与反序列化读取session使用的引擎不同时，会导致数据无法正确的反序列化。</p>
+<h2 id="一、概念"><a href="#一、概念" class="headerlink" title="一、概念"></a>一、概念</h2><p>SSRF(Server-Side Request Forgery:服务器端请求伪造)</p>
+<p>　SSRF漏洞（服务器端请求伪造）：是一种由攻击者构造形成由服务端发起请求的一个安全漏洞。一般情况下，SSRF攻击的目标是从外网无法访问的内部系统。（正是因为它是由服务端发起的，所以它能够请求到与它相连而与外网隔离的内部系统）</p>
+<p>我的理解是，正常情况下，我们无法访问内网，或者说无法向内网发送报文，但是ssrf是通过服务器访问内网，由于服务器属于内部系统，那么内网就不会拒绝服务器的请求，从而达到一个访问内网的目的。</p>
+<p>正常我们发送请求的过程:<br>客户端—–&gt;服务器(未过滤)——&gt;目标 地址</p>
+<p>可以看到，最后发送目标地址的报文是由服务器发出的，倘若服务器对客户端的url不加以过滤处理，就可能造成srrf漏洞</p>
+<h2 id="二、ssrf漏洞实例"><a href="#二、ssrf漏洞实例" class="headerlink" title="二、ssrf漏洞实例"></a>二、ssrf漏洞实例</h2><p>理解一个漏洞的最快方法就是通过实例取了解它</p>
+<p>这里有一个网站，它希望我们通过GET输入其他的网站，从而跳转到我们输入的网页<br><img src="https://img-blog.csdnimg.cn/2621ee63d25d4fd187f17ee341dbf330.png" alt="在这里插入图片描述">如果我们输入<a target="_blank" rel="noopener" href="http://www.baidu.com,那我们就来到了百度的页面/">www.baidu.com,那我们就来到了百度的页面</a><br><img src="https://img-blog.csdnimg.cn/9c8b36dc8a34456bbe73fe46256a3775.png" alt="在这里插入图片描述"><br>倘若我不按规矩走，输入它内网的地址以及文件既127.0.0.1/flag.php,就有可能访问到flag.php里面的内容</p>
+<p><img src="https://img-blog.csdnimg.cn/f418d35520c24506a21e5f55c121c726.png" alt="在这里插入图片描述">这就是一个简单的ssrf漏洞例子</p>
+<p>产生漏洞后，产生的危害有<br>任意访问内网的文件<br>DOS攻击(请求大文件，始终保持连接占用服务器资源)<br>攻击web应用等</p>
+<h2 id="三、ssrf漏洞产生原因"><a href="#三、ssrf漏洞产生原因" class="headerlink" title="三、ssrf漏洞产生原因"></a>三、ssrf漏洞产生原因</h2><p>这里有一个网上大佬总结的ssrf漏洞的图，总结的很详细</p>
+<p><img src="https://img-blog.csdnimg.cn/a532e103d37f4c76a73e9eaaf00dc154.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>主要谈一下利用方式，主要就是这四种协议</p>
+<p>首先这是我搭建的一个网页，它的想法是希望我们输入一个url，从而跳转到那个网页</p>
+<p><img src="https://img-blog.csdnimg.cn/5722b4c908324151b3c2d10b9328e6d7.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>下面是后端代码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span>(<span class="params"><span class="variable">$url</span></span>)</span>&#123;  </span><br><span class="line">    <span class="variable">$ch</span> = curl_init();</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$url</span>);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>);</span><br><span class="line">    curl_exec(<span class="variable">$ch</span>);</span><br><span class="line">    curl_close(<span class="variable">$ch</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$url</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>];</span><br><span class="line">curl(<span class="variable">$url</span>); </span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>curl()可以利用的协议有很多 file,duct,gopher都可以</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">?url=file:<span class="comment">//127.0.0.1/1.txt</span></span><br><span class="line">file协议可以用来读取任意文件</span><br><span class="line"></span><br><span class="line">?url=dict:<span class="comment">//127.0.0.1:8081</span></span><br><span class="line">dict协议可以查看端口开放情况(可以结合BP爆破端口号)</span><br><span class="line"></span><br><span class="line">?gopher:<span class="comment">//&lt;host&gt;:&lt;port&gt;/&lt;gopher-path&gt;</span></span><br><span class="line">gopher协议可以反弹shell，也就是通过服务器向内网发送报文</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>使用dict爆破端口<br><img src="https://img-blog.csdnimg.cn/b8226fdaf6904bb6ba71cb43e47493c5.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>通过gopher协议向内网的其他flag.php传送POST数据(甚至可以通过POST上传图片码等文件)<br><img src="https://img-blog.csdnimg.cn/a5d26b7e4d674b7db7320b525430e9b1.png" alt="在这里插入图片描述"></p>
+<p>在gopher协议中，由于是服务器通过curl向内网发生报文，我们需要对gopher-path内容进行两次编码<br>因为报文内容会在客户端的url上解码一次，服务器通过curl发送报文时解码一次，共两次</p>
+<p>同时还要注意编码过程中换行符%0A要全部替换成%0D%0A,其原因时在linux系统里面换行符的url编码是%0A，而windos是%0D0A，国内大部分在线编码器都是转换成%0A</p>
+<p><strong>注意</strong><br>以上的方法全部都是伪协议<br>伪协议成立的条件还是下面两个函数必须是打开状态，以及版本大于7.3.4</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include=On</span><br><span class="line">allow_url_fopen=On</span><br></pre></td></tr></table></figure>
+
+<p>关于渗透的方式这里有一个大佬写的非常好，甚至很多我都不会，看来仍需学习，链接放这儿了<a target="_blank" rel="noopener" href="https://blog.csdn.net/u012206617/article/details/108941738">ssrf渗透方法</a></p>
+<h2 id="常见的过滤与绕过"><a href="#常见的过滤与绕过" class="headerlink" title="常见的过滤与绕过"></a>常见的过滤与绕过</h2><p>常见的过滤</p>
+<ol>
+<li> 过滤开头不是<a target="_blank" rel="noopener" href="http://xxx.com的所有链接/">http://xxx.com的所有链接</a></li>
+<li>过滤格式为ip的链接，比如127.0.0.1</li>
+<li> 结尾必须是某个后缀</li>
+</ol>
+<p>绕过方法</p>
+<ol>
+<li>http基础认证(加上@)<br>也就是url格式改成<a target="_blank" rel="noopener" href="http://abc.com@127.0.0.1(等同于/?127.0.0.1)">http://abc.com@127.0.0.1(等同于/?127.0.0.1)</a></li>
+<li>使用短链接<br>短链接指向的地址就是内网地址</li>
+<li>更改为其他进制的ip<br>IP地址转换成十进制：</li>
+<li>0.0.1=2130706433</li>
+</ol>
+<h2 id="关于ssrf漏洞可能出现的场景"><a href="#关于ssrf漏洞可能出现的场景" class="headerlink" title="关于ssrf漏洞可能出现的场景"></a>关于ssrf漏洞可能出现的场景</h2><ol>
+<li>首先就是通过url分享网页，也就是这篇笔记中我开头说的例子，这里就不多做解释了</li>
+<li>图片下载与加载<br>一个页面，上面有很多图片，而这些图片可能是保存在他们本地服务器的图片，然后在网页上调用，这样是安全的。<br>同时还有另一种情况就是，程序员为了偷懒，或者是节省空间，在网上借用图片是不是下载在本地，而是直接把图片连接地址放上去，这种方法就有可能是有ssrf漏洞的<br>例如下面这种就是可能存在ssrf漏洞的加载<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://www.douban.com/***/service?image=http://www.baidu.com/img/bd_logo1.png</span><br></pre></td></tr></table></figure></li>
+<li>在线翻译<br> 通过url地址翻译文本内容可能存在ssrf漏洞</li>
+</ol>
+<h2 id="ssrf漏洞的防范"><a href="#ssrf漏洞的防范" class="headerlink" title="ssrf漏洞的防范"></a>ssrf漏洞的防范</h2><p>一、首先就是要对获取url进行一个过滤，过滤掉内网ip，最好是设置一个白名单</p>
+<p>二、对进制不需要的协议，仅允许http和https请求</p>
+<p>三、禁止302跳转,或每跳转一次检查新的host是否为内网ip,后禁止</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span>(<span class="params"><span class="variable">$url</span></span>)</span>&#123;</span><br><span class="line">    <span class="variable">$ch</span> = curl_init();</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$url</span>);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_FOLLOWLOCATION, <span class="literal">True</span>);</span><br><span class="line">    <span class="comment">// 限制为HTTPS、HTTP协议</span></span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);</span><br><span class="line">    curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>);</span><br><span class="line">    curl_exec(<span class="variable">$ch</span>);</span><br><span class="line">    curl_close(<span class="variable">$ch</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$url</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>];</span><br><span class="line">curl(<span class="variable">$url</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>以上代码就对各种伪协议加上了限制，同时设置跳转重定向为True(也就是默认不跳转)</p>
+<p>四、限制请求的端口为HTTP常用的端口，比如 80,443,8080,8088等</p>
 
       
 
@@ -266,6 +286,10 @@
 			 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">PHP漏洞</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">SSRF</a>
         		</li>
       		
 		</ul>
@@ -321,7 +345,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -335,18 +359,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          浅析ssrf漏洞
-        
-      </div>
-    </a>
   
-  
-    <a href="/2021/08/15/sqlmap%E7%94%A8%E6%B3%95/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">sqlmap用法</div>
+    <a href="/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">php反序列化漏洞</div>
       <i class="icon-circle-right"></i>
     </a>
   

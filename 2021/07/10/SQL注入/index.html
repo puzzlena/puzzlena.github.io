@@ -6,30 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>文件上传原理及常见的绕过方式 | Hexo</title>
+  <title>sql注入漏洞原理 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="文件上传漏洞是指由于程序员未对上传的文件进行严格的验证和过滤，而导致的用户可以越过其本身权限向服务器上传恶意文件，从而获取信息造成危害">
+  <meta name="description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
 <meta property="og:type" content="article">
-<meta property="og:title" content="文件上传原理及常见的绕过方式">
-<meta property="og:url" content="http://example.com/2021/08/15/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/index.html">
+<meta property="og:title" content="sql注入漏洞原理">
+<meta property="og:url" content="http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="文件上传漏洞是指由于程序员未对上传的文件进行严格的验证和过滤，而导致的用户可以越过其本身权限向服务器上传恶意文件，从而获取信息造成危害">
+<meta property="og:description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2021071319301285.png#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713194733897.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713200131367.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713200309201.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713195317554.png#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713195626490.png#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210713202701839.png#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210714094507758.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2021071516310315.png#_center">
-<meta property="article:published_time" content="2021-08-14T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-08-25T14:36:42.604Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710200606847.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710201623407.png">
+<meta property="article:published_time" content="2021-07-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-09-13T05:42:23.149Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="文件上传">
+<meta property="article:tag" content="sql注入">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/2021071319301285.png#pic_center">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -181,95 +175,57 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-文件上传" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-SQL注入" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      文件上传原理及常见的绕过方式
+      sql注入漏洞原理
     </h1>
   
 
         
-        <a href="/2021/08/15/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" class="archive-article-date">
-  	<time datetime="2021-08-14T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-15</time>
+        <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2021-07-09T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-10</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>文件上传漏洞是指由于程序员未对上传的文件进行严格的验证和过滤，而导致的用户可以越过其本身权限向服务器上传恶意文件，从而获取信息造成危害</p>
+        <p>sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅<br>本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞</p>
 <span id="more"></span>
-<h1 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h1><p>假设有一个服务器，它希望你能够上传照片，但是你却上传了一个木马文件，并且上传成功了。那么这个木马文件就会再服务器的后台，是可以被执行的，这就是文件上传漏洞</p>
-<p>本文主要是讲述一些典型的绕过手段</p>
-<pre><code>最典型的木马文件如下
-</code></pre>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;php? <span class="keyword">eval</span>(_POST[<span class="string">&#x27;a&#x27;</span>]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>当该文件被上传到服务器后端时，我们就可以通过一些方式来获取我们想要的信息了</p>
-<p>通过中国蚁剑连接到对应的文件上传目录，我们就可以连接到对应的url了，从而获取url里其他目录的文件<br><img src="https://img-blog.csdnimg.cn/2021071319301285.png#pic_center" alt="在这里插入图片描述">蚁剑的使用方法简单不加以说明</p>
-<p>当然，当我们进行文件上传时，客户端或者是服务端不会让我们直接上传.php木马文件，会对前端或是后端加以限制，目的在于让我们无法完成木马文件上传操作，或者是找不到上传目录</p>
-<p>所以就需要们掌握文件上传的各种让过，而文件上传有一下几种验证方式<br><img src="https://img-blog.csdnimg.cn/20210713194733897.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<h2 id="前端验证绕过"><a href="#前端验证绕过" class="headerlink" title="前端验证绕过"></a>前端验证绕过</h2><ul>
-<li><p>为了防止我们恶意上传木马文件，客户端的前端或是后端往往会对上传文件类型有限制，前端验证就是其中一种</p>
-</li>
-<li><p>前端验证往往是通过客户端的javascript来对上传文件加以限制，当我们打开Burpsuit抓包，我们将php文件上传，Burp未抓到，页面就弹出文件格式错误的警告，这种往往就是前端验证，由于代码写在前端页面，导致我们还未抓到包就报错<br><img src="https://img-blog.csdnimg.cn/20210713200131367.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-</li>
-<li><p>解决方法也很简单，我们用把.php文件改为可以被允许的.jpg文件，然后上传，把抓的包拦截，再Burpsuit里面将1.jpg文件改为1.php文件，就可以绕过前端验证，上传php文件。<br><img src="https://img-blog.csdnimg.cn/20210713200309201.png" alt="在这里插入图片描述"></p>
-</li>
-</ul>
-<h2 id="MIME绕过"><a href="#MIME绕过" class="headerlink" title="MIME绕过"></a>MIME绕过</h2><ul>
-<li><p>MIME类型检测是指，当我们上传一个文件时，我们发送的包中有一项Content Type，后面放的是我们发送文件的种类<br><img src="https://img-blog.csdnimg.cn/20210713195317554.png#pic_center" alt="在这里插入图片描述"></p>
-</li>
-<li><p>服务端往往会对这一种类进行检测，通常会只允许我们上传规定的文件类型，如image/jpeg是jpg类型，image/png是png的类型，若是遇到php文件的类型(application/octet-stream)则会上传失败，服务端拒绝接收包。</p>
-</li>
-</ul>
-<p>绕过方法很简单，我们只需要使用Burpsuit抓包，再Content-Type后面改为服务端允许的文件类型，就可以躲避服务端的MIME检测<br> <img src="https://img-blog.csdnimg.cn/20210713195626490.png#pic_center" alt="在这里插入图片描述"></p>
-<h2 id="00截断"><a href="#00截断" class="headerlink" title="00截断"></a>00截断</h2><ul>
-<li><p>原理：</p>
-<p>  和C语言相同，C语言的数组中\0代表结束符，计算机当编译到\0时则认为数组结束，<strong>00截断</strong>也是相同的原理，在遇到某些函数时，函数会将%00看作为结束符号。那么运行到%00前面就中断了</p>
-</li>
-</ul>
-<p>当我们的文件路径如下时</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/index.php/upload/<span class="number">1</span>.php%<span class="number">00</span>.jpg</span><br></pre></td></tr></table></figure>
 
-<p>然后实际客户端读取的是/index.php/upload/1.php</p>
-<p>同样，有些服务端不仅对Content-Type有类型限制，也限制了.php等文件格式，在上传1.php时，我们也可以用Burpsuit对1.php进行如下修改</p>
-<p><img src="https://img-blog.csdnimg.cn/20210713202701839.png#pic_center" alt="在这里插入图片描述"><br>这样，服务端就会认为我们上传的时.jpg文件，而实际上我们上传的是1.php</p>
-<h2 id="文件名后缀绕过"><a href="#文件名后缀绕过" class="headerlink" title="文件名后缀绕过"></a>文件名后缀绕过</h2><ul>
-<li>原理<br> 部分情况服务端可能会对报文部分类型的后缀文件禁止上传，如遇到**.php,.php4,.php5**等等文件就发生报错，当00截断的条件也不满足时，我们就需要采取特殊的绕过了</li>
-</ul>
+<h2 id="漏洞产生原理"><a href="#漏洞产生原理" class="headerlink" title="漏洞产生原理"></a>漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生<br>归根到底就是程序员没有对参数进行过滤，以及防护，下面举了几个典型的注入例子</p>
+<p>下面是一个有注入漏洞的登陆界面的后端</p>
+<p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$conn</span>=mysqli_connect(<span class="variable">$dbServername</span>,<span class="variable">$dbUsername</span>,<span class="variable">$dbPassword</span>,<span class="variable">$dbName</span>);<span class="comment">//连接数据库</span></span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="subst">$userName</span>&#x27; and password=&#x27;<span class="subst">$Password</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$conn</span>,<span class="variable">$sql1</span>)；</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$result</span>)&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;log in&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span>&#123; <span class="keyword">echo</span> <span class="string">&quot;erro&quot;</span>; &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
+<p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;1&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span>#<span class="string">&#x27; and password=&#x27;</span>$Password<span class="string">&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
+<p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
+<h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
+<h3 id="mysql中重要的表"><a href="#mysql中重要的表" class="headerlink" title="mysql中重要的表"></a>mysql中重要的表</h3><p>在Mysql 5.0以上版本，定义了<strong>information_schema</strong>数据库,用来存储数据库元信息。<br>其中<strong>schemata</strong>表中：<strong>schema_name</strong>用来存储数据库名.</p>
+<p><strong>tables</strong>表中：<strong>table_schema</strong>和<strong>table_name</strong>分别用来存储数据库名和表名。</p>
+<p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
+<p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
+<h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sele <span class="operator">*</span><span class="keyword">from</span> news <span class="keyword">where</span> id <span class="operator">=</span><span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>于是我们就可以通过输入sql语句，达到注入效果</p>
+<p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" alt="在这里插入图片描述"></p>
+<p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
+<p>这里我用 select * from news where id=-1 union select 1, group_concat(schema_name)from information_schema.schemata来查询所有的数据库<br> <img src="https://img-blog.csdnimg.cn/20210710201623407.png" alt="在这里插入图片描述">图中红框内就是我们所有的数据库</p>
+<p> 通过相同方法，我们可以用schemata表和tables表和columns表获取数据库中所有的表和字段的信息</p>
+<p>这就是最基础的sql整型注入原理，还有其他注入类型在我的另一篇有详细解释<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入案例</a></p>
+<h2 id="0X02-sql注入防范"><a href="#0X02-sql注入防范" class="headerlink" title="#0X02 sql注入防范"></a>#0X02 sql注入防范</h2><p>既然发现了漏洞就需要我们进行防范了<br>通常是以下几个防范办法</p>
 <ol>
-<li>更换同类的后缀名<br>当php后缀被禁用时，可以试试将后缀名改为<strong>php4</strong>和<strong>php5</strong>，其他类型的木马文件同样如此，可以换成同类型的木马文件后缀，来绕过后缀名的检测当我们不知道有哪些后缀名可以使用时，我们可以通过<strong>爆破</strong>的方式，把所有木马文件后缀放在一个txt文档中进行爆破</li>
+<li>数据库的普通用户权限和管理员权限分明，用户提交数据后，所连接的数据库权限应该是普通用户级别，这样就防止了sql注入代码对数据库进行增加或删除数据的操作</li>
+<li>将用户输入的语句参数化，而不是直接嵌入到sql语句当中，这样的好处就是我们可以对用户提交上去的数据进行验证和过滤，过滤主要是过滤掉空格或者是特殊字符，甚至可以把sql注入中的一些敏感字符给过滤掉</li>
+<li>对用户加以输入加以限制，在后端对用户输入添加字符限制，如果你只想用户输入数字，那么就对相应的参数加以验证，其他的同样如此，尽量让用户只能输入你想要他输入的东西。</li>
 </ol>
-<ol start="2">
-<li><p>有些Apache是允许解析其他文件后缀的，例如在**.htaccess**中， 如果配置有如下代码，则能够解析php和phtm|文件。</p>
-<p>再上传一个.jpg文件，会自动当php文件识别</p>
-</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AddType application/x-httpd-php .jpg</span><br></pre></td></tr></table></figure>
-
-<ol start="3">
-<li><p>在windos中，文件默认读取顺序时从右到左，遇到 . 停止，当遇到一个无法识别的文件后缀时，自动选择跳过，从而造成了漏洞的出现</p>
-<p>如1.php.abcd 在读取的时候就默认读取为1.php</p>
-</li>
-<li><p>特定函数绕过<br>有些服务端为了删除.php文件，使用了特定的函数，例如该源码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--</span><br><span class="line"><span class="variable">$name</span> = basename(<span class="variable">$_FILES</span>[<span class="string">&#x27;file&#x27;</span>][<span class="string">&#x27;name&#x27;</span>]);</span><br><span class="line"><span class="variable">$blacklist</span> = <span class="keyword">array</span>(<span class="string">&quot;php&quot;</span>, <span class="string">&quot;php5&quot;</span>, <span class="string">&quot;php4&quot;</span>, <span class="string">&quot;php3&quot;</span>, <span class="string">&quot;phtml&quot;</span>, <span class="string">&quot;pht&quot;</span>, <span class="string">&quot;jsp&quot;</span>, <span class="string">&quot;jspa&quot;</span>, <span class="string">&quot;jspx&quot;</span>, <span class="string">&quot;jsw&quot;</span>, <span class="string">&quot;jsv&quot;</span>, <span class="string">&quot;jspf&quot;</span>, <span class="string">&quot;jtml&quot;</span>, <span class="string">&quot;asp&quot;</span>, <span class="string">&quot;aspx&quot;</span>, <span class="string">&quot;asa&quot;</span>, <span class="string">&quot;asax&quot;</span>, <span class="string">&quot;ascx&quot;</span>, <span class="string">&quot;ashx&quot;</span>, <span class="string">&quot;asmx&quot;</span>, <span class="string">&quot;cer&quot;</span>, <span class="string">&quot;swf&quot;</span>, <span class="string">&quot;htaccess&quot;</span>, <span class="string">&quot;ini&quot;</span>);</span><br><span class="line"><span class="variable">$name</span> = str_ireplace(<span class="variable">$blacklist</span>, <span class="string">&quot;&quot;</span>, <span class="variable">$name</span>);</span><br><span class="line">--&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
-</ol>
-<p>该源码使用了str_ireplace()函数，该函数时用来替换数组中的文件后缀，当我们文件后缀有array数组中的字符串时，函数自动把他替换为空字符，使文件不合规范，发生报错</p>
-<p>也就是我们的1.php文件变为了1.文件，想要绕过，我们只需要双写后缀1.pphphp，文件读取到php替换为空字符后，照样还是1.php文件</p>
-<h1 id="DATA绕过"><a href="#DATA绕过" class="headerlink" title="::$DATA绕过"></a>::$DATA绕过</h1><p>在windows中，如果遇见文件名+::$DATA的话，会将DATA后的数据看成为数据流，如</p>
-<p>1.php::$DATAabc 会被看成1.php</p>
-<p>其目的是为了绕过文件后缀检查,在上传到winods时，会自动删去::%DATA</p>
-<h2 id="文件头检查"><a href="#文件头检查" class="headerlink" title="文件头检查"></a>文件头检查</h2><p>有些服务端不仅要MIME检测看文件的类型，还要看后缀，可能还要看文件头的格式是否正确，任何文件都可以用十六进制编写<br><img src="https://img-blog.csdnimg.cn/20210714094507758.png" alt="在这里插入图片描述"><br>用十六进制打开文件后，不同类型的文件都有他们固定的文件头和文件尾。服务器可能就通过看这些文件头文件尾来判断该文件是什么文件</p>
-<ul>
-<li>绕过方法-1<br>  通过自己准备一个简单的jpg文件(最好是空白的，可以用QQ截图工具)，若是jpg文件过于复杂可能会导致转换的十六进制太长。<br>  用记事本打开jpg文件，然后再末端加上我们的木马代码  <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">eval</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;password&#x27;</span>]) <span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-  再把文件后缀改为.php，这样的php文件就jpg的文件头了  要想是php文件有jpg文件的文件尾，只需要把木马脚本写到jpg文件的开头</li>
-<li>绕过方法-2<br>  可以通过打开cmd 输入命令将一个php文件和一个jpg文件合起来，然后生成自己想要的形式</li>
-</ul>
-<p><img src="https://img-blog.csdnimg.cn/2021071516310315.png#_center" alt="在这里插入图片描述"></p>
 
       
 
@@ -304,7 +260,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">文件上传</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
         		</li>
       		
 		</ul>
@@ -360,7 +316,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/08/15/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -374,15 +330,20 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/08/15/sssrf%E6%BC%8F%E6%B4%9E/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2021/07/13/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          浅析ssrf漏洞
+          文件上传原理及常见的绕过方式
         
       </div>
     </a>
   
+  
+    <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">sql注入原理</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
