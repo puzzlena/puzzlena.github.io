@@ -6,24 +6,26 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>sql注入漏洞原理 | Hexo</title>
+  <title>Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
+  <meta name="description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。 CSRF的原理在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cook">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sql注入漏洞原理">
-<meta property="og:url" content="http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/index.html">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/2021/09/30/csrf/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
+<meta property="og:description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。 CSRF的原理在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cook">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710200606847.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710201623407.png">
-<meta property="article:published_time" content="2021-07-09T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-13T05:42:23.149Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a82025d5cafe498fb538ff88fa552ad8.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/34baf20c27ed4289a987f7fa137a8389.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/63ff6e20aaa34639961661309cc9cff9.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/71c18e18261e40d6871142ba576645ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_17,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/21fd909f0f0a4cde90b08994a73e0a6c.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_13,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2021-09-30T02:21:13.015Z">
+<meta property="article:modified_time" content="2021-09-30T02:20:53.995Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="sql注入">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -175,57 +177,44 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-SQL注入" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-csrf" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      sql注入漏洞原理
-    </h1>
-  
-
-        
-        <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2021-07-09T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-10</time>
-</a>
-        
-      </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅<br>本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞</p>
-<span id="more"></span>
+        <p>跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。</p>
+<h2 id="CSRF的原理"><a href="#CSRF的原理" class="headerlink" title="CSRF的原理"></a>CSRF的原理</h2><p>在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cookie时间到期时，用户再一次访问就又需要登录了。</p>
+<p>CSRF漏洞就是黑客在用户的cookie未到期之前，让用户点击一个url，然后黑客在网页中放置恶意代码，从而向攻击网站发送请求。</p>
+<h2 id="CSRF实战-GET"><a href="#CSRF实战-GET" class="headerlink" title="CSRF实战(GET)"></a>CSRF实战(GET)</h2><p>光说原理可能有点儿绕，直接本地搭建靶场来理解(pikachu 靶场)。</p>
+<p>这里有一个用户登录后修改个人信息的网页，</p>
+<p><img src="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>当我们把信息修改后，提交抓包观察后发现，就是简单的通过get传入信息，进行修改</p>
+<p><img src="https://img-blog.csdnimg.cn/a82025d5cafe498fb538ff88fa552ad8.png" alt="在这里插入图片描述"><br>那么我们可以构造一个payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.0.126/pikachu/vul/csrf/csrfget/csrf_get_edit.php?sex=123&amp;phonenum=456&amp;add=789&amp;email=456&amp;submit=submit</span><br></pre></td></tr></table></figure>
+<p>这是一串url,当一个啥也不懂的小白在自己登录账号后，并且cooie为过期的情况下点击了这个连接，那么他的信息就已经被修改了，这种方式 太明显了，稍微懂一点网络安全的人通过判断url?后面的那串字符都不会点击</p>
+<p>然而道高一尺魔高一丈，假如黑客自己在服务器上搭建了一个网页，假设域名就是<a target="_blank" rel="noopener" href="http://www.abcd113.com,看着很正常对吧,然而网页内部有这么一串代码,当用户点击网页后,这串代码就自动执行了/">www.abcd113.com，看着很正常对吧，然而网页内部有这么一串代码,当用户点击网页后，这串代码就自动执行了</a></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">http://192.168.0.126:8081//pikachu/vul/csrf/csrfget/csrf_get_edit.php?sex</span>=<span class="string">girl&amp;phonenum</span>=<span class="string">ss&amp;add</span>=<span class="string">789&amp;email</span>=<span class="string">456&amp;submit</span>=<span class="string">submit</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里我建立了一个1.html</p>
+<p><img src="https://img-blog.csdnimg.cn/34baf20c27ed4289a987f7fa137a8389.png" alt="在这里插入图片描述"></p>
+<p>打开网页后发现啥也没有，但是此时网页已经以用户身份给攻击网站发送了请求，个人信息已经被修改了，通过这种方式就可以做到神不知鬼不觉，被修改后用户自己甚至还察觉不到原因。</p>
+<p><img src="https://img-blog.csdnimg.cn/63ff6e20aaa34639961661309cc9cff9.png" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/71c18e18261e40d6871142ba576645ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_17,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>以上的方式是通过GET方式进行跨站请求，简单的甚至不需要自己搭建网站就能够完成攻击</p>
+<h2 id="SSRF-POST"><a href="#SSRF-POST" class="headerlink" title="SSRF POST"></a>SSRF POST</h2><p>上面我们是通过get 的方式达到跨站请求效果，这次如果服务器使用POST来接收修改信息，我们同样可以使用通过建立网站，内部创造一个表单达到攻击目的。</p>
+<p>这次通过抓包，发现是POST提交方式<br><img src="https://img-blog.csdnimg.cn/21fd909f0f0a4cde90b08994a73e0a6c.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_13,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>但这样同样有攻击漏洞，攻击者同样可以创造一个<a target="_blank" rel="noopener" href="http://www.abcd123.com域名的网站/">www.abcd123.com域名的网站</a></p>
+<p>在网站内部可以加入以下表单</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript"><span class="built_in">window</span>.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">  <span class="built_in">document</span>.getElementById(<span class="string">&quot;postsubmit&quot;</span>).click();</span></span><br><span class="line"><span class="javascript">&#125;</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span> <span class="attr">action</span>=<span class="string">&quot;http://192.168.0.126:8081/pikachu/vul/csrf/csrfpost/csrf_post_edit.php&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;sex&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;sex&quot;</span> <span class="attr">value</span>=<span class="string">&quot;boy&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;phonenum&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;phonenum&quot;</span> <span class="attr">value</span>=<span class="string">&quot;54213&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;add&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;add&quot;</span> <span class="attr">value</span>=<span class="string">&quot;hacker&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;email&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;email&quot;</span> <span class="attr">value</span>=<span class="string">&quot;sdsd&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;postsubmit&quot;</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">name</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;submit&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h2 id="漏洞产生原理"><a href="#漏洞产生原理" class="headerlink" title="漏洞产生原理"></a>漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生<br>归根到底就是程序员没有对参数进行过滤，以及防护，下面举了几个典型的注入例子</p>
-<p>下面是一个有注入漏洞的登陆界面的后端</p>
-<p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$conn</span>=mysqli_connect(<span class="variable">$dbServername</span>,<span class="variable">$dbUsername</span>,<span class="variable">$dbPassword</span>,<span class="variable">$dbName</span>);<span class="comment">//连接数据库</span></span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="subst">$userName</span>&#x27; and password=&#x27;<span class="subst">$Password</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$conn</span>,<span class="variable">$sql1</span>)；</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$result</span>)&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;log in&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span>&#123; <span class="keyword">echo</span> <span class="string">&quot;erro&quot;</span>; &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
-<p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;1&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span>#<span class="string">&#x27; and password=&#x27;</span>$Password<span class="string">&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
-<p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
-<p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
-<h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
-<h3 id="mysql中重要的表"><a href="#mysql中重要的表" class="headerlink" title="mysql中重要的表"></a>mysql中重要的表</h3><p>在Mysql 5.0以上版本，定义了<strong>information_schema</strong>数据库,用来存储数据库元信息。<br>其中<strong>schemata</strong>表中：<strong>schema_name</strong>用来存储数据库名.</p>
-<p><strong>tables</strong>表中：<strong>table_schema</strong>和<strong>table_name</strong>分别用来存储数据库名和表名。</p>
-<p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
-<p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
-<h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sele <span class="operator">*</span><span class="keyword">from</span> news <span class="keyword">where</span> id <span class="operator">=</span><span class="number">1</span></span><br></pre></td></tr></table></figure>
-<p>于是我们就可以通过输入sql语句，达到注入效果</p>
-<p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" alt="在这里插入图片描述"></p>
-<p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
-<p>这里我用 select * from news where id=-1 union select 1, group_concat(schema_name)from information_schema.schemata来查询所有的数据库<br> <img src="https://img-blog.csdnimg.cn/20210710201623407.png" alt="在这里插入图片描述">图中红框内就是我们所有的数据库</p>
-<p> 通过相同方法，我们可以用schemata表和tables表和columns表获取数据库中所有的表和字段的信息</p>
-<p>这就是最基础的sql整型注入原理，还有其他注入类型在我的另一篇有详细解释<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入案例</a></p>
-<h2 id="0X02-sql注入防范"><a href="#0X02-sql注入防范" class="headerlink" title="#0X02 sql注入防范"></a>#0X02 sql注入防范</h2><p>既然发现了漏洞就需要我们进行防范了<br>通常是以下几个防范办法</p>
+<p>当用户点击这个url，也就是<a target="_blank" rel="noopener" href="http://www.abc123.com时,网站同样也会遭受攻击/">www.abc123.com时，网站同样也会遭受攻击</a></p>
+<h2 id="如何防范CSRF"><a href="#如何防范CSRF" class="headerlink" title="如何防范CSRF"></a>如何防范CSRF</h2><p>简单讲述了什么是CSRF，接下来重点便是怎么防护<br>从上面案例也知道，当修改信息时，如果不做任何防护手段很容易被恶意修改。倘若是购物软件，甚至可以利用该漏洞达到请求下单的目的。</p>
+<p>那么如何防范有下面这几个方式</p>
 <ol>
-<li>数据库的普通用户权限和管理员权限分明，用户提交数据后，所连接的数据库权限应该是普通用户级别，这样就防止了sql注入代码对数据库进行增加或删除数据的操作</li>
-<li>将用户输入的语句参数化，而不是直接嵌入到sql语句当中，这样的好处就是我们可以对用户提交上去的数据进行验证和过滤，过滤主要是过滤掉空格或者是特殊字符，甚至可以把sql注入中的一些敏感字符给过滤掉</li>
-<li>对用户加以输入加以限制，在后端对用户输入添加字符限制，如果你只想用户输入数字，那么就对相应的参数加以验证，其他的同样如此，尽量让用户只能输入你想要他输入的东西。</li>
+<li>验证HTTP Referer来源<br>在HTTP报文中，Referer是用来记录这条报文的请求地址，假如我们是银行，当用户提交转账申请时，可以追溯报文中的Referer，设置一个白名单，仅允许来源是银行的URL来请求申请，防止第三方黑客网页，跨站请求。</li>
+<li>POST提交<br>同样假设我们是银行服务器，上个方法追溯到了Referer的来源，基本屏蔽了大部分的跨站请求，但是这种方法就相当于把安全交给了HTTP协议，自身网页仍然是有漏洞。有些公司，为了防止内网某些信息泄露，甚至在浏览器上拒绝提供Refer(现在浏览器是有拒绝Refer选项的)，若是网页收到这些没有Refer的用户的请求，自动认为是CSRF攻击，这种方法终究不是最保险的。</li>
+<li>在请求地址种加入token<br>我的理解是，当用户获取一个表单，比如说打开了银行的转账界面，这时银行会先生成一个随机的Token值，然后把页面返回给用户，当用户提交申请时就会自动带着这个token值，服务器会拦截这个token值然后二者比对，相同后才会执行用户请求，由于token是随机的，黑客也不容易伪造。</li>
 </ol>
+<p>下面是我觉得写的特别好的两篇关于CSRF的博客(别人大佬写的)</p>
+<p>这一篇把CSRF原理讲的特别地透<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hyddd/archive/2009/04/09/1432744.html">浅析CSRF攻击方式</a></p>
+<p>这一篇我认为关于如何防范CSRF漏洞讲的特别好<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/stpeace/article/details/53512283">CSRF攻击与防御</a></p>
 
       
 
@@ -255,17 +244,6 @@
     <div class="article-info article-info-index">
       
       
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
       
 
       
@@ -316,7 +294,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/09/30/csrf/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -330,15 +308,20 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          sql注入原理
+          (no title)
         
       </div>
     </a>
   
+  
+    <a href="/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">浅析ssrf漏洞</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 

