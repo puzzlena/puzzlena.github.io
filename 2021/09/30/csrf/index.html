@@ -6,14 +6,14 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>Hexo</title>
+  <title>csrf漏洞 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。 CSRF的原理在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cook">
+  <meta name="description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="csrf漏洞">
 <meta property="og:url" content="http://example.com/2021/09/30/csrf/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。 CSRF的原理在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cook">
+<meta property="og:description" content="跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/a82025d5cafe498fb538ff88fa552ad8.png">
@@ -21,9 +21,10 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/63ff6e20aaa34639961661309cc9cff9.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/71c18e18261e40d6871142ba576645ec.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_17,color_FFFFFF,t_70,g_se,x_16">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/21fd909f0f0a4cde90b08994a73e0a6c.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_13,color_FFFFFF,t_70,g_se,x_16">
-<meta property="article:published_time" content="2021-09-30T02:21:13.015Z">
-<meta property="article:modified_time" content="2021-09-30T02:20:53.995Z">
+<meta property="article:published_time" content="2021-09-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-09-30T02:25:20.859Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="csrf">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/1687a8562c464ad98714b539f87d943e.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_16,color_FFFFFF,t_70,g_se,x_16">
   
@@ -180,9 +181,25 @@
             <article id="post-csrf" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      csrf漏洞
+    </h1>
+  
+
+        
+        <a href="/2021/09/30/csrf/" class="archive-article-date">
+  	<time datetime="2021-09-29T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-09-30</time>
+</a>
+        
+      </header>
+    
     <div class="article-entry" itemprop="articleBody">
       
         <p>跨站请求伪造(CSRF)的攻击方式简单理解就是：攻击者盗用了用户的身份，以用户身份向客户端发送请求并被执行。造成的后果有：以用户名义发送信息，或者是修改信息、发送购物请求等。</p>
+<span id="more"></span>
 <h2 id="CSRF的原理"><a href="#CSRF的原理" class="headerlink" title="CSRF的原理"></a>CSRF的原理</h2><p>在用户登录网页时，服务器往往会生成一个cookie,在服务器内部，记下了客户端的ip，当客户端的ip带着这个cookid再一次访问该网页时，用户就不需要重复登录操作了，一进入网页就是登录状态，而当生成的cookie时间到期时，用户再一次访问就又需要登录了。</p>
 <p>CSRF漏洞就是黑客在用户的cookie未到期之前，让用户点击一个url，然后黑客在网页中放置恶意代码，从而向攻击网站发送请求。</p>
 <h2 id="CSRF实战-GET"><a href="#CSRF实战-GET" class="headerlink" title="CSRF实战(GET)"></a>CSRF实战(GET)</h2><p>光说原理可能有点儿绕，直接本地搭建靶场来理解(pikachu 靶场)。</p>
@@ -244,6 +261,17 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">csrf</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
@@ -308,18 +336,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          (no title)
-        
-      </div>
-    </a>
   
-  
-    <a href="/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">浅析ssrf漏洞</div>
+    <a href="/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">文件包含漏洞</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -455,11 +474,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
+                <a href="javascript:void(0)" class="js-tag color5">csrf</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">SSRF</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">文件包含</a>
               </li>
             
             <div class="clearfix"></div>
