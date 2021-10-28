@@ -20,7 +20,7 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/ccb908a4c3de4818855a7d27a03cd727.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_14,color_FFFFFF,t_70,g_se,x_16">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/07838f6a05ec445ebc9755ebdf9f9a0c.png">
 <meta property="article:published_time" content="2021-10-27T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-10-28T10:17:34.699Z">
+<meta property="article:modified_time" content="2021-10-28T10:30:09.229Z">
 <meta property="article:author" content="xu">
 <meta property="article:tag" content="PHP漏洞">
 <meta property="article:tag" content="php反序列化">
@@ -261,7 +261,7 @@
       <!-- 百度字体平台:http://fontstore.baidu.com/static/editor/index.html -->
       <i class="icon-statistics"></i>
       <span class="post-meta-item-text"> 字数统计:</span>
-      <span class="post-count">1k字</span>
+      <span class="post-count">1.1k字</span>
     </span>
   </span>
 
@@ -270,7 +270,7 @@
     <span class="post-meta-item-icon">
       <i class="icon-book icon"></i>
       <span class="post-meta-item-text"> 阅读时长≈</span>
-      <span class="post-count">3分</span>
+      <span class="post-count">4分</span>
     </span>
   </span>
 </div>
@@ -307,9 +307,10 @@
 <p>空口无凭，直接用用实例说话</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">session_start();</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="variable">$a</span> = <span class="string">&#x27;aa&#x27;</span>;</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">__wakeup</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="keyword">$this</span>-&gt;a;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>按照我们刚才的分析，最后页面输出的应该是xx对吧，最后结果也的确如此<br><img src="https://img-blog.csdnimg.cn/07838f6a05ec445ebc9755ebdf9f9a0c.png" alt="在这里插入图片描述">最后的结果就是对象A绕过了$a=’aa’这一选项，直接输出了xx，这就是漏洞的产生</p>
+<h2 id="如何防范"><a href="#如何防范" class="headerlink" title="如何防范"></a>如何防范</h2><p>其实也没啥事，这个漏洞的根本原因就是php序列化引擎不一样导致的，只需要各个文件都用一个引擎就好了。防范也就没啥好说的了。</p>
 <h2 id="小总结"><a href="#小总结" class="headerlink" title="小总结"></a>小总结</h2><p>总结一下吧，当你打开一个页面，session所作出的具体反应就是先看你是否带有session id，如果有的话就直接读取你上一次会话结束后存储在本地的session文件，如果php序列化引擎不一样，解释的结果就不一样，就导致了漏洞的产生(如果没有sessionid,则会给你生成一个sessionid,以便于在关闭页面时，存储一个session文件)</p>
 <p>这就是全部内容了，其实理解了总结起来也没多少内容<br>下面是我学习过程中参考的一些大佬写的网站<br><a target="_blank" rel="noopener" href="https://www.jb51.net/article/116246.htm">大佬1</a><br><a target="_blank" rel="noopener" href="https://blog.spoock.com/2016/10/16/php-serialize-problem/">大佬2</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/h19910518/article/details/79348051">大佬3</a></p>
-<h2 id="CTF应用"><a href="#CTF应用" class="headerlink" title="CTF应用"></a>CTF应用</h2><p>日后再更</p>
+<h2 id="CTF上的应用"><a href="#CTF上的应用" class="headerlink" title="CTF上的应用"></a>CTF上的应用</h2><p>累死了，日后再更</p>
 
     
 
@@ -622,7 +623,7 @@
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">csrf</a>
+                <a href="javascript:void(0)" class="js-tag color1">sql注入</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -634,7 +635,7 @@
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">sql注入</a>
+                <a href="javascript:void(0)" class="js-tag color5">csrf</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -642,11 +643,11 @@
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
+                <a href="javascript:void(0)" class="js-tag color5">文件包含</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">文件包含</a>
+                <a href="javascript:void(0)" class="js-tag color5">文件上传</a>
               </li>
              
               <li class="article-tag-list-item">
