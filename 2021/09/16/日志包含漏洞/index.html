@@ -13,23 +13,29 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
   <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="一些简单的sqlmap命令">
+  <meta name="description" content="日志包含漏洞也是ssrf的一种吧，同样服务器没有很好的过滤，或者是服务器配置不当导致用户进入了内网">
   <meta name="author" content="xu">
   <meta name="keywords" content="">
-  <meta name="description" content="一些简单的sqlmap命令">
+  <meta name="description" content="日志包含漏洞也是ssrf的一种吧，同样服务器没有很好的过滤，或者是服务器配置不当导致用户进入了内网">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sqlmap用法">
-<meta property="og:url" content="http://example.com/2021/08/15/sqlmap%E7%94%A8%E6%B3%95/index.html">
+<meta property="og:title" content="ssrf日志包含漏洞">
+<meta property="og:url" content="http://example.com/2021/09/16/%E6%97%A5%E5%BF%97%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="一些简单的sqlmap命令">
+<meta property="og:description" content="日志包含漏洞也是ssrf的一种吧，同样服务器没有很好的过滤，或者是服务器配置不当导致用户进入了内网">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2021-08-14T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-08-25T14:27:08.960Z">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c2610454f1f0420f9cbb3bf2188fd795.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b497954a3a094865997c7d8a69baddb7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/15dc69325fa54dbe8b6e397eade292aa.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ae401dbe696440cb9031a0a30bccb019.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2021-09-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-11-03T05:37:38.389Z">
 <meta property="article:author" content="xu">
-<meta property="article:tag" content="sql注入">
+<meta property="article:tag" content="SSRF">
+<meta property="article:tag" content="特殊姿势">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/c2610454f1f0420f9cbb3bf2188fd795.png">
   
-  <title>sqlmap用法 - Hexo</title>
+  <title>ssrf日志包含漏洞 - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
 
@@ -175,7 +181,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="sqlmap用法">
+            <span class="h2" id="subtitle" title="ssrf日志包含漏洞">
               
             </span>
 
@@ -185,8 +191,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-08-15 00:00" pubdate>
-        August 15, 2021 am
+      <time datetime="2021-09-16 00:00" pubdate>
+        September 16, 2021 am
       </time>
     </span>
   
@@ -196,7 +202,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      459 字
+      442 字
     </span>
   
 
@@ -234,24 +240,23 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">sqlmap用法</h1>
+            <h1 style="display: none">ssrf日志包含漏洞</h1>
             
             <div class="markdown-body">
-              <p>一些简单的sqlmap命令</p>
+              <p>日志包含漏洞也是ssrf的一种吧，同样服务器没有很好的过滤，或者是服务器配置不当导致用户进入了内网</p>
 <span id="more"></span>
-<h2 id="get注入基本用法"><a href="#get注入基本用法" class="headerlink" title="get注入基本用法"></a>get注入基本用法</h2><p>相关代码</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sqlmap">python sqlmap.py &quot;url&quot; --dbs<br>python sqlmap.py -D &quot;数据库&quot; --tables<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columns<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; -C &quot;列&quot; --dump<br></code></pre></td></tr></table></figure>
-
-<h2 id="post注入基本用法"><a href="#post注入基本用法" class="headerlink" title="post注入基本用法"></a>post注入基本用法</h2><p>1、先对页面进行抓包</p>
-<p>2、找到相对应的注入点前后加上*</p>
-<p>3、保存为txt文档到桌面</p>
-<p>4、对txt文档进行sql注入</p>
-<p>相关代码</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sqlmap">pyhon sqlmap.py -r 文本文件 --dbs          //查看所有数据库,若执行不出，可在后面加--level=3代表注入等级<br>pyhon sqlmap.py -r 文本文件 --current-db    //查看当前数据库<br></code></pre></td></tr></table></figure>
-
-<hr>
-<p>title: test2<br>date: 2019-10-26 17:14:26<br>tags:<br>    - 小工具<br>    - hexo<br>    - yilia<br>    - tag</p>
-<hr>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>首先需要开启服务器记录日志功能</p>
+<p>在不同的系统，存放日志文件地方和文件名不同<br>apache一般是/var/log/apache/access.log</p>
+<p>nginx的log在/var/log/nginx/access.log和/var/log/nginx/error.log</p>
+<p>由于访问URL时访问URL时，服务器会对其编码，所以得通过抓包的形式尝试注入</p>
+<h2 id="实际运用"><a href="#实际运用" class="headerlink" title="实际运用"></a>实际运用</h2><p>先通过/etc/passwd判断是否存在ssrf漏洞<br>因为不管是什么系统，都会在etc目录下存放passwd文件</p>
+<figure class="highlight qml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs qml">?<span class="hljs-built_in">url</span>=<span class="hljs-regexp">/etc/</span>passwd<br></code></pre></td></tr></table></figure>
+<p>如果成功访问说明是可以访问内网文件, 那么就可以通过这种方式访问日志文件了</p>
+<p><img src="https://img-blog.csdnimg.cn/c2610454f1f0420f9cbb3bf2188fd795.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>先访问日志文件，发现是nginx服务器，并且看到存储的是客户端的User-Agent信息<br><img src="https://img-blog.csdnimg.cn/b497954a3a094865997c7d8a69baddb7.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">接着只要在User-Agent处注入就好了</p>
+<p><img src="https://img-blog.csdnimg.cn/15dc69325fa54dbe8b6e397eade292aa.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>成功地达到了注入地效果</p>
+<p><img src="https://img-blog.csdnimg.cn/ae401dbe696440cb9031a0a30bccb019.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>在ctf中要想找flag的话把phpinfo()换成一句话木马就好了</p>
 
             </div>
             <hr>
@@ -262,7 +267,9 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/sql%E6%B3%A8%E5%85%A5/">sql注入</a>
+                      <a class="hover-with-bg" href="/tags/SSRF/">SSRF</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E6%AE%8A%E5%A7%BF%E5%8A%BF/">特殊姿势</a>
                     
                   </div>
                 
@@ -279,9 +286,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/08/26/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">
+                      <a href="/2021/09/30/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">php反序列化漏洞</span>
+                        <span class="hidden-mobile">文件包含漏洞</span>
                         <span class="visible-mobile">Previous</span>
                       </a>
                     
@@ -289,8 +296,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/08/08/sql%E7%9B%B2%E6%B3%A8/">
-                        <span class="hidden-mobile">sql盲注</span>
+                      <a href="/2021/09/13/sssrf%E6%BC%8F%E6%B4%9E/">
+                        <span class="hidden-mobile">浅析ssrf漏洞</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
