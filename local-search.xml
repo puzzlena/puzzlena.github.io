@@ -35,9 +35,9 @@
     
     <tags>
       
-      <tag>RCE</tag>
-      
       <tag>特殊姿势</tag>
+      
+      <tag>RCE</tag>
       
     </tags>
     
@@ -103,7 +103,7 @@
   
   
   <entry>
-    <title>ssrf日志包含漏洞</title>
+    <title>日志包含漏洞</title>
     <link href="/2021/09/16/%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/"/>
     <url>/2021/09/16/%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/</url>
     
