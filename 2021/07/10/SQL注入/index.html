@@ -255,10 +255,10 @@
 <h2 id="漏洞产生原理"><a href="#漏洞产生原理" class="headerlink" title="漏洞产生原理"></a>漏洞产生原理</h2><p>sql注入是用户在提交参数时参杂了sql注入代码，并且被后端执行了，这样就导致漏洞的产生<br>归根到底就是程序员没有对参数进行过滤，以及防护，下面举了几个典型的注入例子</p>
 <p>下面是一个有注入漏洞的登陆界面的后端</p>
 <p>用户通过前端把账号和密码分别提交到$userName 和$Password中</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-variable">$conn</span>=mysqli_connect(<span class="hljs-variable">$dbServername</span>,<span class="hljs-variable">$dbUsername</span>,<span class="hljs-variable">$dbPassword</span>,<span class="hljs-variable">$dbName</span>);<span class="hljs-comment">//连接数据库</span><br><span class="hljs-variable">$sql</span>=<span class="hljs-string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="hljs-subst">$userName</span>&#x27; and password=&#x27;<span class="hljs-subst">$Password</span>&#x27;&quot;</span>;<br><span class="hljs-variable">$result</span>=mysqli_query(<span class="hljs-variable">$conn</span>,<span class="hljs-variable">$sql1</span>)；<br><span class="hljs-keyword">if</span>(<span class="hljs-variable">$result</span>)&#123;<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;log in&quot;</span>;<br>&#125;<br><span class="hljs-keyword">else</span>&#123; <span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;erro&quot;</span>; &#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-variable">$conn</span>=mysqli_connect(<span class="hljs-variable">$dbServername</span>,<span class="hljs-variable">$dbUsername</span>,<span class="hljs-variable">$dbPassword</span>,<span class="hljs-variable">$dbName</span>);<span class="hljs-comment">//连接数据库</span><br><span class="hljs-variable">$sql</span>=<span class="hljs-string">&quot;SELECT * FROM user WHERE username=&#x27;<span class="hljs-subst">$userName</span>&#x27; and password=&#x27;<span class="hljs-subst">$Password</span>&#x27;&quot;</span>;<br><span class="hljs-variable">$result</span>=mysqli_query(<span class="hljs-variable">$conn</span>,<span class="hljs-variable">$sql1</span>)；<br><span class="hljs-keyword">if</span>(<span class="hljs-variable">$result</span>)&#123;<br>	<span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;log in&quot;</span>;<br>&#125;<br><span class="hljs-keyword">else</span>&#123; <span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;erro&quot;</span>; &#125;<br></code></pre></div></td></tr></table></figure>
 <p>可以看到，用户提交的账号和密码直接被连接数据库使用了，并且以返回结果的成功与否来判断是否</p>
 <p>这样当我们输入账户时输入 1’ or 1=1#<br>这样我们的连接mysql的语句就是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">user</span> <span class="hljs-keyword">WHERE</span> username<span class="hljs-operator">=</span><span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-number">1</span><span class="hljs-operator">=</span><span class="hljs-number">1</span>#<span class="hljs-string">&#x27; and password=&#x27;</span>$Password<span class="hljs-string">&#x27;&quot;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">user</span> <span class="hljs-keyword">WHERE</span> username<span class="hljs-operator">=</span><span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-number">1</span><span class="hljs-operator">=</span><span class="hljs-number">1</span>#<span class="hljs-string">&#x27; and password=&#x27;</span>$Password<span class="hljs-string">&#x27;&quot;</span><br></code></pre></div></td></tr></table></figure>
 <p>可以看到后面输入密码的部分被#给注释掉了，而且最终这条语句被执行后返回值一定是真</p>
 <p>也就是$result一定为真，那么我们不用输入密码就直接登录成功了,这就是一个简单的post注入</p>
 <h2 id="0X01-sql注入原理"><a href="#0X01-sql注入原理" class="headerlink" title="#0X01 sql注入原理"></a>#0X01 sql注入原理</h2><p>我们知道了sql注入漏洞的原理后，还得知道sql注入的原理，这样能方便我们对sql注入更好的理解</p>
@@ -267,7 +267,7 @@
 <p><strong>columns</strong>表中:<strong>table_schema</strong>(数据库名)，<strong>table_name</strong>(表名)，<strong>column_name</strong>(字段名)</p>
 <p>通过这些表，我们能把数据库中几乎所有的数据都给查询到，也是sql注入的基石</p>
 <h3 id="简单的sql注入案例（整型注入）"><a href="#简单的sql注入案例（整型注入）" class="headerlink" title="简单的sql注入案例（整型注入）"></a>简单的sql注入案例（整型注入）</h3><p>这是一道简单的有整型注入的题<br><img src="https://img-blog.csdnimg.cn/20210710193652853.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzUxNTUzODE0,size_16,color_FFFFFF,t_70" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">当我们输入1时，其后端内部信息是</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql">sele <span class="hljs-operator">*</span><span class="hljs-keyword">from</span> news <span class="hljs-keyword">where</span> id <span class="hljs-operator">=</span><span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sql">sele <span class="hljs-operator">*</span><span class="hljs-keyword">from</span> news <span class="hljs-keyword">where</span> id <span class="hljs-operator">=</span><span class="hljs-number">1</span><br></code></pre></div></td></tr></table></figure>
 <p>于是我们就可以通过输入sql语句，达到注入效果</p>
 <p>当我们输入-1 union select 1,2时可以看到，对应的回显变成了我们的1,2<br>    <img src="https://img-blog.csdnimg.cn/20210710200606847.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
 <p>我们也可以通过 select *from news where id=-1 union select database()，version()来查询数据库对应的版本</p>
@@ -307,21 +307,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/07/13/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/">
+                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">文件上传原理及常见的绕过方式</span>
+                        <span class="hidden-mobile">sql注入原理(2)</span>
                         <span class="visible-mobile">Previous</span>
                       </a>
                     
                   </article>
                   <article class="post-next col-6">
                     
-                    
-                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">
-                        <span class="hidden-mobile">sql注入原理(2)</span>
-                        <span class="visible-mobile">Next</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
                     
                   </article>
                 </div>

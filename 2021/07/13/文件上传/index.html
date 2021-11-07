@@ -259,9 +259,9 @@
 <span id="more"></span>
 <h1 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h1><p>假设有一个服务器，它希望你能够上传照片，但是你却上传了一个木马文件，并且上传成功了。那么这个木马文件就会再服务器的后台，是可以被执行的，这就是文件上传漏洞</p>
 <p>本文主要是讲述一些典型的绕过手段</p>
-<pre><code>最典型的木马文件如下
-</code></pre>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php">&lt;php? <span class="hljs-keyword">eval</span>(_POST[<span class="hljs-string">&#x27;a&#x27;</span>]);<span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<div class="hljs code-wrapper"><pre><code>最典型的木马文件如下
+</code></pre></div>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php">&lt;php? <span class="hljs-keyword">eval</span>(_POST[<span class="hljs-string">&#x27;a&#x27;</span>]);<span class="hljs-meta">?&gt;</span><br></code></pre></div></td></tr></table></figure>
 <p>当该文件被上传到服务器后端时，我们就可以通过一些方式来获取我们想要的信息了</p>
 <p>通过中国蚁剑连接到对应的文件上传目录，我们就可以连接到对应的url了，从而获取url里其他目录的文件<br><img src="https://img-blog.csdnimg.cn/2021071319301285.png#pic_center" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">蚁剑的使用方法简单不加以说明</p>
 <p>当然，当我们进行文件上传时，客户端或者是服务端不会让我们直接上传.php木马文件，会对前端或是后端加以限制，目的在于让我们无法完成木马文件上传操作，或者是找不到上传目录</p>
@@ -287,7 +287,7 @@
 </li>
 </ul>
 <p>当我们的文件路径如下时</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php">/index.php/upload/<span class="hljs-number">1</span>.php%<span class="hljs-number">00</span>.jpg<br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php">/index.php/upload/<span class="hljs-number">1</span>.php%<span class="hljs-number">00</span>.jpg<br></code></pre></div></td></tr></table></figure>
 
 <p>然后实际客户端读取的是/index.php/upload/1.php</p>
 <p>同样，有些服务端不仅对Content-Type有类型限制，也限制了.php等文件格式，在上传1.php时，我们也可以用Burpsuit对1.php进行如下修改</p>
@@ -303,14 +303,14 @@
 <p>再上传一个.jpg文件，会自动当php文件识别</p>
 </li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apach">AddType application/x-httpd-php .jpg<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apach">AddType application/x-httpd-php .jpg<br></code></pre></div></td></tr></table></figure>
 
 <ol start="3">
 <li><p>在windos中，文件默认读取顺序时从右到左，遇到 . 停止，当遇到一个无法识别的文件后缀时，自动选择跳过，从而造成了漏洞的出现</p>
 <p>如1.php.abcd 在读取的时候就默认读取为1.php</p>
 </li>
 <li><p>特定函数绕过<br>有些服务端为了删除.php文件，使用了特定的函数，例如该源码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs php">&lt;!--<br><span class="hljs-variable">$name</span> = basename(<span class="hljs-variable">$_FILES</span>[<span class="hljs-string">&#x27;file&#x27;</span>][<span class="hljs-string">&#x27;name&#x27;</span>]);<br><span class="hljs-variable">$blacklist</span> = <span class="hljs-keyword">array</span>(<span class="hljs-string">&quot;php&quot;</span>, <span class="hljs-string">&quot;php5&quot;</span>, <span class="hljs-string">&quot;php4&quot;</span>, <span class="hljs-string">&quot;php3&quot;</span>, <span class="hljs-string">&quot;phtml&quot;</span>, <span class="hljs-string">&quot;pht&quot;</span>, <span class="hljs-string">&quot;jsp&quot;</span>, <span class="hljs-string">&quot;jspa&quot;</span>, <span class="hljs-string">&quot;jspx&quot;</span>, <span class="hljs-string">&quot;jsw&quot;</span>, <span class="hljs-string">&quot;jsv&quot;</span>, <span class="hljs-string">&quot;jspf&quot;</span>, <span class="hljs-string">&quot;jtml&quot;</span>, <span class="hljs-string">&quot;asp&quot;</span>, <span class="hljs-string">&quot;aspx&quot;</span>, <span class="hljs-string">&quot;asa&quot;</span>, <span class="hljs-string">&quot;asax&quot;</span>, <span class="hljs-string">&quot;ascx&quot;</span>, <span class="hljs-string">&quot;ashx&quot;</span>, <span class="hljs-string">&quot;asmx&quot;</span>, <span class="hljs-string">&quot;cer&quot;</span>, <span class="hljs-string">&quot;swf&quot;</span>, <span class="hljs-string">&quot;htaccess&quot;</span>, <span class="hljs-string">&quot;ini&quot;</span>);<br><span class="hljs-variable">$name</span> = str_ireplace(<span class="hljs-variable">$blacklist</span>, <span class="hljs-string">&quot;&quot;</span>, <span class="hljs-variable">$name</span>);<br>--&gt;<br><br></code></pre></td></tr></table></figure></li>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php">&lt;!--<br><span class="hljs-variable">$name</span> = basename(<span class="hljs-variable">$_FILES</span>[<span class="hljs-string">&#x27;file&#x27;</span>][<span class="hljs-string">&#x27;name&#x27;</span>]);<br><span class="hljs-variable">$blacklist</span> = <span class="hljs-keyword">array</span>(<span class="hljs-string">&quot;php&quot;</span>, <span class="hljs-string">&quot;php5&quot;</span>, <span class="hljs-string">&quot;php4&quot;</span>, <span class="hljs-string">&quot;php3&quot;</span>, <span class="hljs-string">&quot;phtml&quot;</span>, <span class="hljs-string">&quot;pht&quot;</span>, <span class="hljs-string">&quot;jsp&quot;</span>, <span class="hljs-string">&quot;jspa&quot;</span>, <span class="hljs-string">&quot;jspx&quot;</span>, <span class="hljs-string">&quot;jsw&quot;</span>, <span class="hljs-string">&quot;jsv&quot;</span>, <span class="hljs-string">&quot;jspf&quot;</span>, <span class="hljs-string">&quot;jtml&quot;</span>, <span class="hljs-string">&quot;asp&quot;</span>, <span class="hljs-string">&quot;aspx&quot;</span>, <span class="hljs-string">&quot;asa&quot;</span>, <span class="hljs-string">&quot;asax&quot;</span>, <span class="hljs-string">&quot;ascx&quot;</span>, <span class="hljs-string">&quot;ashx&quot;</span>, <span class="hljs-string">&quot;asmx&quot;</span>, <span class="hljs-string">&quot;cer&quot;</span>, <span class="hljs-string">&quot;swf&quot;</span>, <span class="hljs-string">&quot;htaccess&quot;</span>, <span class="hljs-string">&quot;ini&quot;</span>);<br><span class="hljs-variable">$name</span> = str_ireplace(<span class="hljs-variable">$blacklist</span>, <span class="hljs-string">&quot;&quot;</span>, <span class="hljs-variable">$name</span>);<br>--&gt;<br><br></code></pre></div></td></tr></table></figure></li>
 </ol>
 <p>该源码使用了str_ireplace()函数，该函数时用来替换数组中的文件后缀，当我们文件后缀有array数组中的字符串时，函数自动把他替换为空字符，使文件不合规范，发生报错</p>
 <p>也就是我们的1.php文件变为了1.文件，想要绕过，我们只需要双写后缀1.pphphp，文件读取到php替换为空字符后，照样还是1.php文件</p>
@@ -319,7 +319,7 @@
 <p>其目的是为了绕过文件后缀检查,在上传到winods时，会自动删去::%DATA</p>
 <h2 id="文件头检查"><a href="#文件头检查" class="headerlink" title="文件头检查"></a>文件头检查</h2><p>有些服务端不仅要MIME检测看文件的类型，还要看后缀，可能还要看文件头的格式是否正确，任何文件都可以用十六进制编写<br><img src="https://img-blog.csdnimg.cn/20210714094507758.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>用十六进制打开文件后，不同类型的文件都有他们固定的文件头和文件尾。服务器可能就通过看这些文件头文件尾来判断该文件是什么文件</p>
 <ul>
-<li>绕过方法-1<br>  通过自己准备一个简单的jpg文件(最好是空白的，可以用QQ截图工具)，若是jpg文件过于复杂可能会导致转换的十六进制太长。<br>  用记事本打开jpg文件，然后再末端加上我们的木马代码  <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> <span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[<span class="hljs-string">&#x27;password&#x27;</span>]) <span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<li>绕过方法-1<br>  通过自己准备一个简单的jpg文件(最好是空白的，可以用QQ截图工具)，若是jpg文件过于复杂可能会导致转换的十六进制太长。<br>  用记事本打开jpg文件，然后再末端加上我们的木马代码  <figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> <span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[<span class="hljs-string">&#x27;password&#x27;</span>]) <span class="hljs-meta">?&gt;</span><br></code></pre></div></td></tr></table></figure>
   再把文件后缀改为.php，这样的php文件就jpg的文件头了  要想是php文件有jpg文件的文件尾，只需要把木马脚本写到jpg文件的开头</li>
 <li>绕过方法-2<br>  可以通过打开cmd 输入命令将一个php文件和一个jpg文件合起来，然后生成自己想要的形式</li>
 </ul>
@@ -361,8 +361,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5/">
-                        <span class="hidden-mobile">sql注入漏洞原理(1)</span>
+                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">
+                        <span class="hidden-mobile">sql注入原理(2)</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

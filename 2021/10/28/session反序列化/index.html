@@ -28,8 +28,8 @@
 <meta property="article:published_time" content="2021-10-27T16:00:00.000Z">
 <meta property="article:modified_time" content="2021-10-28T11:14:05.150Z">
 <meta property="article:author" content="xu">
-<meta property="article:tag" content="PHP漏洞">
 <meta property="article:tag" content="php反序列化">
+<meta property="article:tag" content="PHP漏洞">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/ccb908a4c3de4818855a7d27a03cd727.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_14,color_FFFFFF,t_70,g_se,x_16">
   
@@ -255,25 +255,25 @@
 <h2 id="什么是SESSION"><a href="#什么是SESSION" class="headerlink" title="什么是SESSION"></a>什么是SESSION</h2><p>首先session是什么，就是一个会话控制，这样描述很肤浅，还得往更深的层次研究，这里是我学习的一个大佬的文章，讲的很透彻<a target="_blank" rel="noopener" href="https://blog.csdn.net/h19910518/article/details/79348051">什么是session</a>(一定要看啊，不然无法理解)</p>
 <p>大概流程就是，当你打开一个页面，php会先判断你有没有sessionid，没有就生成一个id，当你结束后会生成一个文件，当下一次你再访问时，就会判断读取到你的id，php会直接根据id读取上此结束后生成的文件，把里面的东西反序列化出来。<br>这一套操作通常是用来，用户持续保持会话的，也就是用户退出页面后，再访问该页面，也能通过id访问到上回访问的资源。</p>
 <h2 id="php-session中的序列化"><a href="#php-session中的序列化" class="headerlink" title="php session中的序列化"></a>php session中的序列化</h2><p>再来讲讲php的相关序列化<br>session后产生的id文件中的内容就是一段序列化<br>然而php中的下面这个选项，可以选择序列化的方式</p>
-<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">session.serialize_handler</span> = php<br><span class="hljs-attr">session.serialize_handler</span> = php_binary<br><span class="hljs-attr">session.serialize_handler</span> = php_serialize<br></code></pre></td></tr></table></figure>
+<figure class="highlight ini"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs ini"><span class="hljs-attr">session.serialize_handler</span> = php<br><span class="hljs-attr">session.serialize_handler</span> = php_binary<br><span class="hljs-attr">session.serialize_handler</span> = php_serialize<br></code></pre></div></td></tr></table></figure>
 <p>这三种都是他的序列化方式</p>
 <p>下面时一段源码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>ini_set(<span class="hljs-string">&#x27;session.serialize_handler&#x27;</span>, <span class="hljs-string">&#x27;php_serialize&#x27;</span>);<br>session_start();<br><span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">&#x27;name&#x27;</span>] = <span class="hljs-string">&#x27;spoock&#x27;</span>;<br>var_dump(<span class="hljs-variable">$_SESSION</span>);<br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>ini_set(<span class="hljs-string">&#x27;session.serialize_handler&#x27;</span>, <span class="hljs-string">&#x27;php_serialize&#x27;</span>);<br>session_start();<br><span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">&#x27;name&#x27;</span>] = <span class="hljs-string">&#x27;spoock&#x27;</span>;<br>var_dump(<span class="hljs-variable">$_SESSION</span>);<br></code></pre></div></td></tr></table></figure>
 <p>在 php_serialize 引擎下，session文件中存储的数据为:</p>
-<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>:&#123;s:<span class="hljs-number">4</span>:<span class="hljs-string">&quot;name&quot;</span>;s:<span class="hljs-number">6</span>:<span class="hljs-string">&quot;spoock&quot;</span>;&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apache"><span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>:&#123;s:<span class="hljs-number">4</span>:<span class="hljs-string">&quot;name&quot;</span>;s:<span class="hljs-number">6</span>:<span class="hljs-string">&quot;spoock&quot;</span>;&#125;<br></code></pre></div></td></tr></table></figure>
 <p>php 引擎下文件内容为:</p>
-<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 1c">name<span class="hljs-string">|s:6:&quot;</span>spoock<span class="hljs-string">&quot;;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight 1c"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs 1c">name<span class="hljs-string">|s:6:&quot;</span>spoock<span class="hljs-string">&quot;;</span><br></code></pre></div></td></tr></table></figure>
 <p>php_binary 引擎下文件内容为:</p>
-<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">names</span>:<span class="hljs-number">6</span>:<span class="hljs-string">&quot;spoock&quot;</span>;<br></code></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apache"><span class="hljs-attribute">names</span>:<span class="hljs-number">6</span>:<span class="hljs-string">&quot;spoock&quot;</span>;<br></code></pre></div></td></tr></table></figure>
 <p>上面就介绍了这三种序列化的形式，理解这三种序列化很重要</p>
 <h2 id="PHP-session序列化漏洞"><a href="#PHP-session序列化漏洞" class="headerlink" title="PHP session序列化漏洞"></a>PHP session序列化漏洞</h2><p>本来这种序列化是没有漏洞的，可我们经常需要跨文件操作，当两个文件的php序列化解释器不一样时，漏洞就由此产生了</p>
 <p>由实例来解释一下吧,下面这是一段设置序列化引擎的php文件<br>同时还向session文件中写入了内容(这里使用的php_serialize引擎，要求php版本&gt;5.5.4，当时自己也是弄了半天才发现)</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs PHP"><span class="hljs-meta">&lt;?php</span><br>ini_set(<span class="hljs-string">&#x27;session.serialize_handler&#x27;</span>, <span class="hljs-string">&#x27;php_serialize&#x27;</span>);<br>session_start();<br><span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;session_id(): &quot;</span>.session_id().<span class="hljs-string">&quot;&lt;br&gt;&quot;</span>;<br><span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">&#x27;ryat&#x27;</span>] = <span class="hljs-string">&#x27;|O:1:&quot;A&quot;:1:&#123;s:1:&quot;a&quot;;s:2:&quot;xx&quot;;&#125;&#x27;</span>;<br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs PHP"><span class="hljs-meta">&lt;?php</span><br>ini_set(<span class="hljs-string">&#x27;session.serialize_handler&#x27;</span>, <span class="hljs-string">&#x27;php_serialize&#x27;</span>);<br>session_start();<br><span class="hljs-keyword">echo</span> <span class="hljs-string">&quot;session_id(): &quot;</span>.session_id().<span class="hljs-string">&quot;&lt;br&gt;&quot;</span>;<br><span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">&#x27;ryat&#x27;</span>] = <span class="hljs-string">&#x27;|O:1:&quot;A&quot;:1:&#123;s:1:&quot;a&quot;;s:2:&quot;xx&quot;;&#125;&#x27;</span>;<br><span class="hljs-meta">?&gt;</span><br></code></pre></div></td></tr></table></figure>
 <p>最后存储的session文件内容为</p>
 <p><img src="https://img-blog.csdnimg.cn/ccb908a4c3de4818855a7d27a03cd727.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_14,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>好了，就是这样一个序列化，假如当我们进入另一个网页时，该网页首先会看你有没有一个sessionid，有的话就直接根据id访问session文件，将里面的内容反序列化出来</p>
 <p>又假如这个网页使用的序列化引擎是php引擎，根据php引擎的解释，面对这段序列化他则会认为a:1:{s:4:”ryat”;s:30:”是他的对象，而”A”:1:{s:1:”a”;s:2:”xx”;}”是里面的内容<br>最后解释出来的内容也和原本的内容大相径庭了</p>
 <p>空口无凭，直接用用实例说话</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>session_start();<br><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">A</span> </span>&#123;<br>  <span class="hljs-keyword">public</span> <span class="hljs-variable">$a</span> = <span class="hljs-string">&#x27;aa&#x27;</span>;<br>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">__wakeup</span>(<span class="hljs-params"></span>) </span>&#123;<br>    <span class="hljs-keyword">echo</span> <span class="hljs-keyword">$this</span>-&gt;a;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span><br>session_start();<br><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">A</span> </span>&#123;<br>  <span class="hljs-keyword">public</span> <span class="hljs-variable">$a</span> = <span class="hljs-string">&#x27;aa&#x27;</span>;<br>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">__wakeup</span>(<span class="hljs-params"></span>) </span>&#123;<br>    <span class="hljs-keyword">echo</span> <span class="hljs-keyword">$this</span>-&gt;a;<br>  &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
 <p>按照我们刚才的分析，最后页面输出的应该是xx对吧，最后结果也的确如此<br><img src="https://img-blog.csdnimg.cn/07838f6a05ec445ebc9755ebdf9f9a0c.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述">最后的结果就是对象A绕过了$a=’aa’这一选项，直接输出了xx，这就是漏洞的产生</p>
 <h2 id="如何防范"><a href="#如何防范" class="headerlink" title="如何防范"></a>如何防范</h2><p>其实也没啥事，这个漏洞的根本原因就是php序列化引擎不一样导致的，只需要各个文件都用一个引擎就好了。防范也就没啥好说的了。</p>
 <h2 id="小总结"><a href="#小总结" class="headerlink" title="小总结"></a>小总结</h2><p>总结一下吧，当你打开一个页面，session所作出的具体反应就是先看你是否带有session id，如果有的话就直接读取你上一次会话结束后存储在本地的session文件，如果php序列化引擎不一样，解释的结果就不一样，就导致了漏洞的产生(如果没有sessionid,则会给你生成一个sessionid,以便于在关闭页面时，存储一个session文件)</p>
@@ -289,9 +289,9 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/PHP%E6%BC%8F%E6%B4%9E/">PHP漏洞</a>
-                    
                       <a class="hover-with-bg" href="/tags/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">php反序列化</a>
+                    
+                      <a class="hover-with-bg" href="/tags/PHP%E6%BC%8F%E6%B4%9E/">PHP漏洞</a>
                     
                   </div>
                 
@@ -307,6 +307,12 @@
                 <div class="post-prevnext">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2021/11/06/http%E8%B5%B0%E7%A7%81/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">http走私漏洞</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
