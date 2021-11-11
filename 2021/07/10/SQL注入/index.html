@@ -313,9 +313,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/07/13/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/">
+                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">文件上传原理及常见的绕过方式</span>
+                        <span class="hidden-mobile">sql注入原理(2)</span>
                         <span class="visible-mobile">Previous</span>
                       </a>
                     
@@ -323,17 +323,40 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/07/10/SQL%E6%B3%A8%E5%85%A5%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90/">
-                        <span class="hidden-mobile">sql注入原理(2)</span>
-                        <span class="visible-mobile">Next</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
                   </article>
                 </div>
               
             </div>
 
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"WEGCXGAa5RG18TvrREJ4E3qM-gzGzoHsz","appKey":"1oISyjS4rilEb9bBzpBVzCpX","path":"window.location.pathname","placeholder":"吐槽","avatar":"retro","meta":["nick","mail","link"],"requiredFields":[],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"https://wegcxgaa.lc-cn-n1-shared.com","emojiCDN":null,"emojiMaps":null,"enableQQ":false},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+        Fluid.utils.waitElementVisible('#valine .vcontent', () => {
+          Fluid.plugins.initFancyBox('#valine .vcontent img:not(.vemoji)');
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
             
           </article>
         </div>
